@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 // Initialize the app
 const app = express();
@@ -10,6 +11,9 @@ dotenv.config();
 
 // Middleware
 app.use(bodyParser.json());
+
+// Enable CORS
+app.use(cors());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })

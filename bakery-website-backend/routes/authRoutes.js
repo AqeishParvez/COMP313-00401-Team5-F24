@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
+const authenticateToken = require('../middleware/authMiddleware');
 
 // Register a new user
 router.post('/register', async (req, res) => {
@@ -56,8 +57,38 @@ router.get('/users', async (req, res) => {
     }
 });
 
+// Get user details by ID (restricted to managers and staff)
+router.get('/users/:id', authenticateToken, async (req, res) => {
+    if (req.user.role === 'customer') {
+        return res.status(403).json({ message: 'Access denied' });
+    }
+
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Route to get user details (including role)
+router.get('/me', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    console.log('User ID:', userId);  // Debugging output
+    const user = await User.findById(userId)
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    console.log('User:', user);  // Debugging
+
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,  // Include the role in the response
+      staffRole: user.staffRole  // Include the staff role in the response
+    });
+});
+
 module.exports = router;
-
-// Baker: 671d7da043937006ff494379
-
-// Order ID: 671d9c773ecd20f1a2f29fc4
