@@ -15,7 +15,7 @@ const Register = (kw) => {
   useEffect(() => {
 
     if (kw.mode == "edit-account") {
-      setEdit(true)
+    //setEdit(true)
       (async () => {
         const userInfo = await getUserInfo();
         console.log(userInfo);
