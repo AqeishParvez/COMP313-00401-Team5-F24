@@ -21,6 +21,8 @@ const App = () => {
         <Route path="/products/:id" element={<ProductDetails />} />
         <Route path="/manager-dashboard" element={<ProtectedRoute element={ManagerDashboard} />} />
         <Route path="/" element={<Products />} />
+        <Route path="/account" element={<Register mode = {"edit-account"}/>} />
+
       </Routes>
     </div>
   );

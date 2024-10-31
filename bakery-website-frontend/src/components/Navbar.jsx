@@ -34,6 +34,12 @@ const CustomNavbar = () => {
     navigate('/login');
   };
 
+  const handleAccount = () => {
+    console.log("Account Info");
+    
+    navigate('/account')
+  }
+
   return (
     <Navbar bg="light" expand="lg">
       <Navbar.Brand as={Link} to="/">Bakery Website</Navbar.Brand>
@@ -50,6 +56,7 @@ const CustomNavbar = () => {
         <Nav>
           {user ? (
             <NavDropdown title={user.name} id="user-dropdown">
+              <NavDropdown.Item onClick={handleAccount}>My Account</NavDropdown.Item>
               <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
             </NavDropdown>
           ) : (
