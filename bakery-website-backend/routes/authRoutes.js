@@ -83,12 +83,37 @@ router.get('/me', authenticateToken, async (req, res) => {
     console.log('User:', user);  // Debugging
 
     res.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,  // Include the role in the response
-      staffRole: user.staffRole  // Include the staff role in the response
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,  // Include the role in the response
+        staffRole: user.staffRole  // Include the staff role in the response
     });
+});
+
+router.post('/update', authenticateToken, async (req, res) => {
+    console.log("--------")
+    const userId = req.user.id;
+    console.log('User ID:', userId);  // Debugging output
+    const user = await User.findById(userId)
+
+    if (!user) return res.status(404).json({ message: 'Need to Log in!' });
+
+    const { name, email, password, role, staffRole } = req.body;
+    user.name = name;
+    user.email = email;
+    // user.password = password;
+    user.role = role;
+    // user.staffRole = staffRole;
+    console.log('User:', user);  // Debugging
+
+    try {
+        await user.save();
+
+        res.status(201).json({ message: 'User updated successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 module.exports = router;
