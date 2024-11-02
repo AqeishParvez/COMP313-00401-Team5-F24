@@ -6,7 +6,8 @@ const authenticateToken = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Place an order (customers only)
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/',authenticateToken, async (req, res) => {
+
     if (req.user.role !== 'customer') {
         return res.status(403).json({ message: 'Only customers can place orders' });
     }

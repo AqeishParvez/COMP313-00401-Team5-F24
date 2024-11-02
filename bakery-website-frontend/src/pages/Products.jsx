@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Card, Row, Col, Container } from 'react-bootstrap';
 
-const Products = () => {
+const Products = (kw) => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
@@ -18,6 +18,16 @@ const Products = () => {
 
     fetchProducts();
   }, []);
+
+
+  const handelAddToCart = (product) =>{
+    if (kw.addToCart){
+      kw.addToCart(product);
+    }
+    else{
+      console.log("login required!");
+    }
+  }
 
   return (
     <Container>
@@ -35,6 +45,7 @@ const Products = () => {
                 <Link to={`/products/${product._id}`} className="btn btn-primary">
                   View Details
                 </Link>
+                <button onClick={() => handelAddToCart({product:product._id, quantity:1})} className="btn btn-primary">Add To Cart</button>
               </Card.Body>
             </Card>
           </Col>

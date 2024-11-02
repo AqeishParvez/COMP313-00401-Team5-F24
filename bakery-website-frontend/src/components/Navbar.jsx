@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, NavDropdown, Button } from 'react-bootstrap';
 import { getUserInfo } from '../helpers/utils';
+import PropTypes from 'prop-types';
+import axios from 'axios';
 
-const CustomNavbar = () => {
+const CustomNavbar = (kw) => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -17,7 +19,7 @@ const CustomNavbar = () => {
     fetchUserInfo();
 
     // Add an event listener to localStorage changes to trigger re-render on login/logout
-    const handleStorageChange = () => {
+    const handleStorageChange = (kw) => {
       fetchUserInfo();
     };
 
@@ -36,8 +38,34 @@ const CustomNavbar = () => {
 
   const handleAccount = () => {
     console.log("Account Info");
-    
+
     navigate('/account')
+  }
+
+  const handelPostOrder = async () => {
+    if (kw.cart && kw.cart.length > 0) {
+      const token = localStorage.getItem('token');
+      await axios.post('http://localhost:5001/api/orders',
+        { products: kw.cart },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Pass the token in the headers
+          }
+        }
+      ).then( (res) => {
+        console.log("confirmation: ", res.data._id); 
+        alert(`Confirmation ID: ${res.data._id}`);
+
+        kw.setCart([]);
+      });
+      console.log("Post Requested!");
+      
+    }
+    else {
+      console.log(" cart is empty");
+      alert(`cart is empty`);
+
+    }
   }
 
   return (
@@ -51,6 +79,8 @@ const CustomNavbar = () => {
           {user?.role === 'manager' && (
             <Nav.Link as={Link} to="/manager-dashboard">Manager Dashboard</Nav.Link>
           )}
+
+          <button onClick={() => handelPostOrder()} className="btn btn-primary">Post Order</button>
         </Nav>
 
         <Nav>
@@ -70,5 +100,7 @@ const CustomNavbar = () => {
     </Navbar>
   );
 };
+
+
 
 export default CustomNavbar;
