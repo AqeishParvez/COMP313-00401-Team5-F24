@@ -49,12 +49,18 @@ router.post('/',authenticateToken, async (req, res) => {
 router.get('/', authenticateToken, async (req, res) => {
     if (req.user.role === 'customer') {
         // Fetch only this customer's orders
-        const orders = await Order.find({ customer: req.user.id });
+        const orders = await Order.find({ customer: req.user.id })
+        .populate('customer', 'name')
+        .populate('products.product', 'name')
+        .populate('assignedStaff', 'name');
         return res.json(orders);
     }
     // Fetch all orders for staff and manager
     if (req.user.role === 'staff' || req.user.role === 'manager') {
-        const orders = await Order.find();
+        const orders = await Order.find()
+        .populate('customer', 'name')
+        .populate('products.product', 'name')
+        .populate('assignedStaff', 'name');
         return res.json(orders);
     }
     res.status(403).json({ message: 'Access denied' });
@@ -76,13 +82,14 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Update order status (staff and managers only)
+// Update order status and products (staff and managers only)
 router.patch('/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'staff' && req.user.role !== 'manager') {
         return res.status(403).json({ message: 'Access denied' });
     }
 
-    const { status } = req.body;
+    const { status, assignedStaff, products } = req.body;
+
     if (!['pending', 'confirmed', 'completed'].includes(status)) {
         return res.status(400).json({ message: 'Invalid status' });
     }
@@ -91,7 +98,23 @@ router.patch('/:id', authenticateToken, async (req, res) => {
         const order = await Order.findById(req.params.id);
         if (!order) return res.status(404).json({ message: 'Order not found' });
 
+        // Update status and assigned staff
         order.status = status;
+        order.assignedStaff = assignedStaff;
+
+        // Update products and calculate total price
+        order.products = products;
+
+        // Calculate total price
+        let totalPrice = 0;
+        for (const item of products) {
+            const product = await Product.findById(item.product);
+            if (product) {
+                totalPrice += product.price * item.quantity;
+            }
+        }
+        order.totalPrice = totalPrice;
+
         const updatedOrder = await order.save();
         res.json(updatedOrder);
     } catch (err) {
@@ -120,6 +143,22 @@ router.patch('/:id/assign', authenticateToken, async (req, res) => {
         const updatedOrder = await order.save();
 
         res.json(updatedOrder);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Delete an order (managers only)
+router.delete('/:id', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'manager') {
+        return res.status(403).json({ message: 'Access denied' });
+    }
+
+    try {
+        const deletedOrder = await Order.findByIdAndDelete(req.params.id);
+        if (!deletedOrder) return res.status(404).json({ message: 'Order not found' });
+
+        res.json(deletedOrder);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Card, Row, Col, Container } from 'react-bootstrap';
+import { Card, Row, Col, Container, Button } from 'react-bootstrap';
+import { useCart } from '../contexts/CartContext';
 
-const Products = (kw) => {
+const Products = () => {
   const [products, setProducts] = useState([]);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -19,33 +21,31 @@ const Products = (kw) => {
     fetchProducts();
   }, []);
 
-
-  const handelAddToCart = (product) =>{
-    if (kw.addToCart){
-      kw.addToCart(product);
-    }
-    else{
-      console.log("login required!");
-    }
-  }
-
   return (
     <Container>
       <Row>
         {products.map((product) => (
           <Col key={product._id} sm={12} md={6} lg={4} xl={3} className="mb-4">
             <Card>
-              {/* Product image placeholder */}
               <Card.Img variant="top" src="https://via.placeholder.com/150" alt={product.name} />
               <Card.Body>
                 <Card.Title>{product.name}</Card.Title>
                 <Card.Text>${product.price}</Card.Text>
 
-                {/* Link to the product details page */}
-                <Link to={`/products/${product._id}`} className="btn btn-primary">
+                <Button
+                  variant="primary"
+                  // Display a message when the product is added to the cart
+                  onClick={() => {
+                    addToCart(product, 1);
+                    alert(`${product.name} added to cart`);
+                  }}
+                >
+                  Add to Cart
+                </Button>
+
+                <Link to={`/products/${product._id}`} className="btn btn-secondary ml-2">
                   View Details
                 </Link>
-                <button onClick={() => handelAddToCart({product:product._id, quantity:1})} className="btn btn-primary">Add To Cart</button>
               </Card.Body>
             </Card>
           </Col>

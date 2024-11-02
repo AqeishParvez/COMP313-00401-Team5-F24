@@ -8,38 +8,37 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProductDetails from './pages/ProductDetails';
 import ManagerDashboard from './pages/ManagerDashboard';
 import Navbar from './components/Navbar';
-import MyCart from './pages/MyCart';
+import EditOrder from './components/EditOrder';
+import Cart from './components/Cart';
+import OrderManagement from './components/OrderManagement';
+import { AuthProvider } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
+
+
 const App = () => {
-  const [cart, setCart] = useState([]);
-  const addToCart = (product) => {
-    // product: {id, quantity=1} != null
-    // cart: product[] = useState.cart
-    const _product= cart.find(p => p.product == product.product);
-    if(_product){
-      _product.quantity += product.quantity;
-      console.log(`product ${_product.product} quantity increased to ${_product.quantity} item(s).`);
-    }
-    else{
-      setCart([...cart, product]);
-      console.log(`product ${product.product} of quantity ${product.quantity} item(s) added to cart.`);
-    }
-  }
+
   return (
     <div>
-      {/* Navbar will always be rendered */}
-      <Navbar cart={cart} setCart={setCart} />
+      <AuthProvider>
+        <CartProvider>
+          {/* Navbar will always be rendered */}
+          <Navbar/>
 
-      {/* Define your routes */}
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/products" element={<Products addToCart={addToCart} />} />
-        <Route path="/products/:id" element={<ProductDetails />} />
-        <Route path="/manager-dashboard" element={<ProtectedRoute element={ManagerDashboard} />} />
-        <Route path="/" element={<Products />} />
-        <Route path="/account" element={<Register mode={"edit-account"} />} />
-        <Route path="/cart" element={<MyCart cart={cart} setCart={setCart} />} />
-      </Routes>
+          {/* Define your routes */}
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/products" element={<Products/>} />
+            <Route path="/products/:id" element={<ProductDetails />} />
+            <Route path="/manager-dashboard" element={<ProtectedRoute element={ManagerDashboard} />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/orders" element={<OrderManagement />} />
+            <Route path="/orders/edit/:orderId" element={<EditOrder />} />
+            <Route path="/" element={<Products />} />
+            <Route path="/account" element={<Register mode={"edit-account"} />} />
+          </Routes>
+        </CartProvider>
+      </AuthProvider>
     </div>
   );
 };

@@ -13,8 +13,7 @@ export const getUserInfo = async () => {
         Authorization: `Bearer ${token}`,
       },
     });
-
-    console.log('User Info:', response.data);  // Debugging output
+    
     return response.data;  // Return user info
   } catch (error) {
     console.error('Error fetching user info:', error);

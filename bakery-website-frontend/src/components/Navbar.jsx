@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, NavDropdown, Button } from 'react-bootstrap';
 import { getUserInfo } from '../helpers/utils';
+import { useCart } from '../contexts/CartContext';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 
-const CustomNavbar = (kw) => {
+
+const CustomNavbar = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const { setCart } = useCart();
 
   // Fetch user info whenever the component mounts or localStorage changes
   useEffect(() => {
@@ -33,6 +36,8 @@ const CustomNavbar = (kw) => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     setUser(null);  // Reset user info
+    setCart([]);  // Clear cart
+
     navigate('/login');
   };
 
@@ -42,32 +47,6 @@ const CustomNavbar = (kw) => {
     navigate('/account')
   }
 
-  const handelPostOrder = async () => {
-    if (kw.cart && kw.cart.length > 0) {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5001/api/orders',
-        { products: kw.cart },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Pass the token in the headers
-          }
-        }
-      ).then((res) => {
-        console.log("confirmation: ", res.data._id);
-        alert(`Confirmation ID: ${res.data._id}`);
-
-        kw.setCart([]);
-      });
-      console.log("Post Requested!");
-
-    }
-    else {
-      console.log(" cart is empty");
-      alert(`cart is empty`);
-
-    }
-  }
-
   return (
     <Navbar bg="light" expand="lg">
       <Navbar.Brand as={Link} to="/">Bakery Website</Navbar.Brand>
@@ -75,12 +54,11 @@ const CustomNavbar = (kw) => {
       <Navbar.Collapse id="basic-navbar-nav">
         <Nav className="mr-auto">
           <Nav.Link as={Link} to="/products">Products</Nav.Link>
+          <Nav.Link as={Link} to="/cart">Cart</Nav.Link>
 
           {user?.role === 'manager' && (
             <Nav.Link as={Link} to="/manager-dashboard">Manager Dashboard</Nav.Link>
           )}
-
-          {user ? (<button onClick={() => handelPostOrder()} className="btn btn-primary">Post Order</button>):""}
         </Nav>
 
         <Nav>

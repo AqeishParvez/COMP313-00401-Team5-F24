@@ -62,11 +62,10 @@ router.patch('/:id', authenticateToken, async (req, res) => {
 // Delete a product
 router.delete('/:id', authenticateToken, async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
-        if (!product) return res.status(404).json({ message: 'Product not found' });
+        const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+        if (!deletedProduct) return res.status(404).send('Product not found');
 
-        await product.remove();
-        res.json({ message: 'Product deleted' });
+        res.json(deletedProduct);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
