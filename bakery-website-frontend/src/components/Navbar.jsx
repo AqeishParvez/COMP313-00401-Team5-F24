@@ -52,14 +52,14 @@ const CustomNavbar = (kw) => {
             Authorization: `Bearer ${token}`, // Pass the token in the headers
           }
         }
-      ).then( (res) => {
-        console.log("confirmation: ", res.data._id); 
+      ).then((res) => {
+        console.log("confirmation: ", res.data._id);
         alert(`Confirmation ID: ${res.data._id}`);
 
         kw.setCart([]);
       });
       console.log("Post Requested!");
-      
+
     }
     else {
       console.log(" cart is empty");
@@ -80,7 +80,7 @@ const CustomNavbar = (kw) => {
             <Nav.Link as={Link} to="/manager-dashboard">Manager Dashboard</Nav.Link>
           )}
 
-          <button onClick={() => handelPostOrder()} className="btn btn-primary">Post Order</button>
+          {user ? (<button onClick={() => handelPostOrder()} className="btn btn-primary">Post Order</button>):""}
         </Nav>
 
         <Nav>
