@@ -18,9 +18,19 @@ const Login = () => {
       // Save the token in localStorage or sessionStorage
       localStorage.setItem('token', token);
 
-      // Redirect to products page
-      navigate('/products');
-      window.location.reload();
+      // If logged in user is manager take them to manager dashboard
+      if (response.data.role === 'manager') {
+        navigate('/manager-dashboard');
+        window.location.reload();
+      } else if (response.data.role === 'staff') {
+        // If logged in user is staff take them to staff dashboard
+        navigate('/orders');
+        window.location.reload();
+      } else {
+        // Redirect to products page
+        navigate('/products');
+        window.location.reload();
+      }
     } catch (err) {
         alert(err);
       setError('Invalid login credentials');

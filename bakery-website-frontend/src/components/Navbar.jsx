@@ -65,9 +65,9 @@ const CustomNavbar = () => {
 
           {user?.role === 'manager' && (
             <>
-              <Nav.Link as={Link} to="/manager-dashboard">Manager Dashboard</Nav.Link>
               <Nav.Link as={Link} to="/manage-staff">Manage Staff</Nav.Link>
               <Nav.Link as={Link} to="/manage-inventory">Manage Products</Nav.Link>
+              <Nav.Link as={Link} to="/manager-dashboard">Manager Dashboard</Nav.Link>
             </>
           )}
         </Nav>
