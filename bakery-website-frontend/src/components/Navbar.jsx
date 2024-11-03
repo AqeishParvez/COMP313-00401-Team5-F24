@@ -68,7 +68,6 @@ const CustomNavbar = () => {
           {user? (
             <>
               <Nav.Link as={Link} to="/orders">Manage Orders</Nav.Link>
-              <Nav.Link onClick={handleCartClick}>Cart {(itemCount? `(x${itemCount})` : `(Empty)`)} </Nav.Link>
             </>
           ) : null }
 
@@ -79,6 +78,11 @@ const CustomNavbar = () => {
               <Nav.Link as={Link} to="/manager-dashboard">Manager Dashboard</Nav.Link>
             </>
           )}
+          
+          {user && user.role === 'customer' && (
+            <Nav.Link onClick={handleCartClick}>Cart {(itemCount? `(x${itemCount})` : `(Empty)`)} </Nav.Link>
+          )}
+          
         </Nav>
 
         <Nav>
