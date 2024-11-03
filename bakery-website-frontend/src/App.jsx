@@ -46,7 +46,7 @@ const App = () => {
                 </ProtectedRoute>
             } />
 
-            <Route path="/manage-inventory" element={
+            <Route path="/manage-products" element={
               <ProtectedRoute>
                 <ManageInventory />
               </ProtectedRoute>

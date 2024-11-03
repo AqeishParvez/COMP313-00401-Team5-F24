@@ -76,11 +76,8 @@ router.get('/users/:id', authenticateToken, async (req, res) => {
 // Route to get user details (including role)
 router.get('/me', authenticateToken, async (req, res) => {
     const userId = req.user.id;
-    console.log('User ID:', userId);  // Debugging output
     const user = await User.findById(userId)
     if (!user) return res.status(404).json({ message: 'User not found' });
-
-    console.log('User:', user);  // Debugging
 
     res.json({
         id: user.id,

@@ -59,14 +59,13 @@ const CustomNavbar = () => {
           {user? (
             <>
               <Nav.Link onClick={handleCartClick}>Cart</Nav.Link>
-              <Nav.Link as={Link} to="/orders">Orders</Nav.Link>
+              <Nav.Link as={Link} to="/orders">Manage Orders</Nav.Link>
             </>
           ) : null }
 
           {user?.role === 'manager' && (
             <>
               <Nav.Link as={Link} to="/manager-dashboard">Manager Dashboard</Nav.Link>
-              <Nav.Link as={Link} to="/orders">Manage Orders</Nav.Link>
               <Nav.Link as={Link} to="/manage-staff">Manage Staff</Nav.Link>
               <Nav.Link as={Link} to="/manage-inventory">Manage Products</Nav.Link>
             </>

@@ -1,32 +1,54 @@
-import React, { useState } from 'react';
-import ProductManagement from '../components/ProductManagement.jsx';
-import StaffManagement from '../components/StaffManagement.jsx';
-import OrderManagement from '../components/OrderManagement.jsx';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Card, Container, Row, Col } from 'react-bootstrap';
 
 const ManagerDashboard = () => {
-  const [view, setView] = useState('');  // State to track the selected view
-
-  // Helper function for Authorization Header
-  const getAuthHeader = () => ({
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-  });
-
   return (
-    <div>
-      <h2>Manager Dashboard</h2>
+    <Container className="mt-4">
+      <h2 className="text-center">Manager Dashboard</h2>
 
-      {/* Buttons to select view */}
-      <div className="d-flex justify-content-around mb-3">
-        <button onClick={() => setView('products')} className="btn btn-primary">Manage Products</button>
-        <button onClick={() => setView('staff')} className="btn btn-secondary">Manage Staff</button>
-        <button onClick={() => setView('orders')} className="btn btn-success">Manage Orders</button>
-      </div>
-
-      {/* Render selected view */}
-      {view === 'products' && <ProductManagement getAuthHeader={getAuthHeader} />}
-      {view === 'staff' && <StaffManagement getAuthHeader={getAuthHeader} />}
-      {view === 'orders' && <OrderManagement getAuthHeader={getAuthHeader} />}
-    </div>
+      <Row className="mt-5">
+        <Col md={4}>
+          <Link to="/manage-products" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Card className="text-center">
+              <Card.Img variant="top" src="https://via.placeholder.com/150" alt="Manage Products" />
+              <Card.Body>
+                <Card.Title>Manage Products</Card.Title>
+                <Card.Text>
+                  View, add, update, and delete products.
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </Link>
+        </Col>
+        <Col md={4}>
+          <Link to="/manage-staff" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Card className="text-center">
+              <Card.Img variant="top" src="https://via.placeholder.com/150" alt="Manage Staff" />
+              <Card.Body>
+                <Card.Title>Manage Staff</Card.Title>
+                <Card.Text>
+                  View, add, update, and manage staff details.
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </Link>
+        </Col>
+        <Col md={4}>
+          <Link to="/orders" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Card className="text-center">
+              <Card.Img variant="top" src="https://via.placeholder.com/150" alt="Manage Orders" />
+              <Card.Body>
+                <Card.Title>Manage Orders</Card.Title>
+                <Card.Text>
+                  View, update, and manage customer orders.
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </Link>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 
