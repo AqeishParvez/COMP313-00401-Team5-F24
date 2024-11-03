@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Button, Form, Modal } from 'react-bootstrap';
+import { useAuth } from '../contexts/AuthContext';
 
-const ProductManagement = ({ getAuthHeader }) => {
+const ProductManagement = () => {
+  const { getAuthHeader } = useAuth();
   const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({ name: '', description: '', price: 0, quantity: 0 });
   const [editingProduct, setEditingProduct] = useState(null); // Holds the product being edited

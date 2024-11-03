@@ -37,7 +37,6 @@ const Products = () => {
                   // Display a message when the product is added to the cart
                   onClick={() => {
                     addToCart(product, 1);
-                    alert(`${product.name} added to cart`);
                   }}
                 >
                   Add to Cart

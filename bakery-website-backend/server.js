@@ -25,6 +25,7 @@ const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const staffRoutes = require('./routes/staffRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 
 // Set up routes
 app.get('/', (req, res) => {
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api', staffRoutes);
+app.use('/api/cart', cartRoutes);
 
 
 // Start the server

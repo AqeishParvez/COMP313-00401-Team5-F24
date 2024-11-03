@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { getUserInfo } from '../helpers/utils.js';
 import ManagerDashboard from '../pages/ManagerDashboard';
 
-const ProtectedRoute = () => {
+const ProtectedRoute = ({ children }) => {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +21,7 @@ const ProtectedRoute = () => {
     return <div>Loading...</div>;
   }
 
-  return role === 'manager' ? <ManagerDashboard /> : <Navigate to="/login" />;
+  return role === 'manager' ? children : <Navigate to="/login" />;
 };
 
 export default ProtectedRoute;

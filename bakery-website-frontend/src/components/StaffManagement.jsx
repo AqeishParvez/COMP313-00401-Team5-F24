@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Button, Form, Modal } from 'react-bootstrap';
+import { useAuth } from '../contexts/AuthContext';
 
-const StaffManagement = ({ getAuthHeader }) => {
+const StaffManagement = () => {
+  const { getAuthHeader } = useAuth();
   const [staffList, setStaffList] = useState([]);
   const [newStaff, setNewStaff] = useState({ name: '', email: '', staffRole: 'baker', password: '123456' });
   const [editingStaff, setEditingStaff] = useState(null); // Holds the staff member being edited

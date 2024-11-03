@@ -3,15 +3,11 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const authenticateToken = require('../middleware/authMiddleware');
+const checkRole = require('../middleware/roleMiddleware');
 const router = express.Router();
 
 // Place an order (customers only)
-router.post('/',authenticateToken, async (req, res) => {
-
-    if (req.user.role !== 'customer') {
-        return res.status(403).json({ message: 'Only customers can place orders' });
-    }
-
+router.post('/',authenticateToken, checkRole(['customer']), async (req, res) => {
     const { products } = req.body;  // Ensure this is an array
 
     if (!Array.isArray(products) || products.length === 0) {

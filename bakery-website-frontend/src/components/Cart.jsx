@@ -1,12 +1,29 @@
 import React from 'react';
 import { Table, Button } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
-  const { cart, removeFromCart } = useCart();
+  const { cart, isLoading, removeFromCart, checkout } = useCart();
+  const navigate = useNavigate();
+
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
 
   const calculateTotalPrice = () => {
-    return cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
+    return cart.reduce((total, item) => total + (item.product?.price || 0) * item.quantity, 0);
+  };
+
+  const handleCheckout = async () => {
+    try {
+      const result = await checkout();
+      console.log(result);
+      alert('Order successfully Placed!');
+      navigate('/orders');
+    } catch (error) {
+      alert('Checkout failed. Please try again.');
+    }
   };
 
   return (
@@ -15,6 +32,7 @@ const Cart = () => {
       {cart.length === 0 ? (
         <p>Your cart is empty</p>
       ) : (
+        <>
         <Table striped bordered hover>
           <thead>
             <tr>
@@ -26,12 +44,12 @@ const Cart = () => {
             </tr>
           </thead>
           <tbody>
-            {cart.map((item) => (
-              <tr key={item.product._id}>
-                <td>{item.product.name}</td>
+            {cart.map((item, index) => (
+              <tr key={item.product?._id || index}>
+                <td>{item.product?.name || "Unnamed Product"}</td>
                 <td>{item.quantity}</td>
-                <td>${item.product.price}</td>
-                <td>${item.product.price * item.quantity}</td>
+                <td>${item.product?.price || 0}</td>
+                <td>${(item.product?.price * item.quantity || 0).toFixed(2)}</td>
                 <td>
                   <Button variant="danger" onClick={() => removeFromCart(item.product._id)}>
                     Remove
@@ -45,6 +63,10 @@ const Cart = () => {
             </tr>
           </tbody>
         </Table>
+        <Button variant="primary" onClick={handleCheckout} disabled={cart.length === 0}>
+        Checkout
+        </Button>
+        </>
       )}
     </div>
   );

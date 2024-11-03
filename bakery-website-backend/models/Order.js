@@ -14,18 +14,29 @@ const OrderSchema = new mongoose.Schema({
     status: { 
         type: String, 
         enum: ['pending', 'confirmed', 'completed'], 
-        default: 'pending' 
+        default: 'pending' ,
+        required: true
     },
-    totalPrice: { type: Number, required: true },
+    totalPrice: { type: Number },
     createdAt: { type: Date, default: Date.now }
 });
 
 // Calculate total price before saving
-OrderSchema.pre('save', function (next) {
-    this.totalPrice = this.products.reduce((total, item) => {
-        return total + item.product.price * item.quantity;
-    }, 0);
-    next();
+OrderSchema.pre('save', async function (next) {
+    try {
+        // Populate products to access product details like price
+        await this.populate('products.product');
+        
+        // Calculate totalPrice
+        this.totalPrice = this.products.reduce((total, item) => {
+            return total + (item.product.price * item.quantity);
+        }, 0);
+        
+        next();
+    } catch (error) {
+        next(error);
+    }
 });
+
 
 module.exports = mongoose.model('Order', OrderSchema);
