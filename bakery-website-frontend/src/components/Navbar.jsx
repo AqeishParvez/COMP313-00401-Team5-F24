@@ -63,7 +63,7 @@ const CustomNavbar = () => {
       <Navbar.Brand as={Link} to="/">Bakery Website</Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">
-        <Nav className="mr-auto">
+        <Nav className="ms-auto">
           <Nav.Link as={Link} to="/products">Products</Nav.Link>
           {user? (
             <>
@@ -80,7 +80,7 @@ const CustomNavbar = () => {
           )}
           
           {user && user.role === 'customer' && (
-            <Nav.Link onClick={handleCartClick}>Cart {(itemCount? `(x${itemCount})` : `(Empty)`)} </Nav.Link>
+            <Nav.Link onClick={handleCartClick} style={itemCount!=0 ? {fontWeight: 'bold', color: '#007bff', border: '2px solid #007bff', borderRadius: '5px', padding: '5px 10px', background: '#e3f2fd'} : {fontWeight: 'normal', color: '#cccccc'}}>Cart {(itemCount? `(x${itemCount})` : `(Empty)`)} </Nav.Link>
           )}
 
         </Nav>
