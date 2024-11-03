@@ -8,7 +8,7 @@ import { useCart } from '../contexts/CartContext';
 const CustomNavbar = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  const { setCart, fetchCart } = useCart();
+  const { setCart, fetchCart, itemCount } = useCart();
 
   // Fetch user info whenever the component mounts or localStorage changes
   useEffect(() => {
@@ -30,6 +30,15 @@ const CustomNavbar = () => {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
+
+  // Fetch cart and item count whenever there are any changes to cart or user
+  useEffect(() => {
+    const refreshCart = async () => {
+      await fetchCart();
+  };
+
+    refreshCart();
+  }, [user]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -58,8 +67,8 @@ const CustomNavbar = () => {
           <Nav.Link as={Link} to="/products">Products</Nav.Link>
           {user? (
             <>
-              <Nav.Link onClick={handleCartClick}>Cart</Nav.Link>
               <Nav.Link as={Link} to="/orders">Manage Orders</Nav.Link>
+              <Nav.Link onClick={handleCartClick}>Cart {(itemCount? `(x${itemCount})` : `(Empty)`)} </Nav.Link>
             </>
           ) : null }
 

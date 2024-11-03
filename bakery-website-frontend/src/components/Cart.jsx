@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Button } from 'react-bootstrap';
 import { useCart } from '../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,7 @@ const Cart = () => {
   if (isLoading) {
     return <p>Loading...</p>;
   }
+
 
   const calculateTotalPrice = () => {
     return cart.reduce((total, item) => total + (item.product?.price || 0) * item.quantity, 0);

@@ -8,6 +8,7 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const { getAuthHeader, userId, userRole } = useAuth();
   const [cart, setCart] = useState([]);
+  const [itemCount, setItemCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
 
@@ -27,6 +28,7 @@ export const CartProvider = ({ children }) => {
       console.log("Fetching cart");
       const response = await axios.get('http://localhost:5001/api/cart', getAuthHeader());
       setCart(response.data);
+      setItemCount(response.data.length);
     } catch (error) {
       console.error('Error fetching cart:', error);
     } finally {
@@ -67,6 +69,7 @@ export const CartProvider = ({ children }) => {
     try {
       const response = await axios.post('http://localhost:5001/api/cart/checkout', {userId}, getAuthHeader());
       setCart([]); // Clear cart after checkout
+      fetchCart();
       return response.data; // Return order details if needed
     } catch (error) {
       console.error('Error during checkout:', error);
@@ -76,7 +79,7 @@ export const CartProvider = ({ children }) => {
   
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, setCart, fetchCart, checkout, isLoading }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, setCart, itemCount, fetchCart, checkout, isLoading }}>
       {children}
     </CartContext.Provider>
   );
