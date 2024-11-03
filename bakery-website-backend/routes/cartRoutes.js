@@ -10,7 +10,6 @@ const checkRole = require('../middleware/roleMiddleware');
 // GET /api/cart
 router.get('/', authenticateToken, checkRole(['customer']), async (req, res) => {
     try {
-      console.log("User ID: ", req.user.id);
       const cart = await Cart.findOne({ userId: req.user.id }).populate('products.product');
       if (!cart) return res.json([]); // Return empty cart if none exists
       res.json(cart.products);

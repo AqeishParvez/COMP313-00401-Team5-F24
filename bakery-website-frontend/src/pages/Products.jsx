@@ -34,17 +34,19 @@ const Products = () => {
 
                 <Button
                   variant="primary"
-                  // Display a message when the product is added to the cart
                   onClick={() => {
                     addToCart(product, 1);
                   }}
                 >
                   Add to Cart
                 </Button>
-
-                <Link to={`/products/${product._id}`} className="btn btn-secondary ml-2">
+                <Button 
+                  variant="secondary"
+                  as={Link}
+                  to={`/products/${product._id}`}
+                >
                   View Details
-                </Link>
+                </Button>
               </Card.Body>
             </Card>
           </Col>

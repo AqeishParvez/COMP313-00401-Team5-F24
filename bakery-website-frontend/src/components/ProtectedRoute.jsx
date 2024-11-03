@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { getUserInfo } from '../helpers/utils.js';
-import ManagerDashboard from '../pages/ManagerDashboard';
 
 const ProtectedRoute = ({ children }) => {
   const [role, setRole] = useState(null);

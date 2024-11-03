@@ -46,6 +46,7 @@ const OrderManagement = () => {
       await axios.delete(`http://localhost:5001/api/orders/${orderId}`, getAuthHeader());
       fetchOrders(); // Refresh orders after deletion
     } catch (err) {
+      alert(err.response.data.message);
       console.error('Error deleting order:', err);
     }
   };
@@ -78,10 +79,10 @@ const OrderManagement = () => {
                 ))}
               </td>
               <td>{order.assignedStaff?.name || 'Unassigned'}</td>
-              <td>{order.totalPrice}</td>
+              <td>{(order.totalPrice).toFixed(2)}</td>
               <td>
                 <Button variant="warning" onClick={() => handleEditOrder(order._id)}>Edit</Button>{' '}
-                <Button variant="danger" onClick={() => handleDeleteOrder(order._id)}>Delete</Button>
+                <Button variant="danger" onClick={() => handleDeleteOrder(order._id)}>Cancel Order</Button>
               </td>
             </tr>
           ))}

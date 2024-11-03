@@ -83,7 +83,8 @@ const EditOrder = () => {
       );
       navigate('/orders'); // Go back to order management page
     } catch (err) {
-      console.error('Error saving order:', err);
+        alert(err.response.data.message);
+        console.error('Error saving order:', err);
     }
   };
 
@@ -93,6 +94,7 @@ const EditOrder = () => {
       {order && (
         <>
           <Form>
+            {userRole !== 'customer' &&
             <Form.Group controlId="orderStatus">
               <Form.Label>Status</Form.Label>
               <Form.Control
@@ -105,6 +107,7 @@ const EditOrder = () => {
                 <option value="completed">Completed</option>
               </Form.Control>
             </Form.Group>
+            }
 
             {userRole !== 'customer' && (
               <Form.Group controlId="assignedStaff">
@@ -146,7 +149,7 @@ const EditOrder = () => {
                 type="number"
                 min="1"
                 value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                onChange={(e) => setQuantity(parseInt(e.target.value) || "")}
               />
             </Form.Group>
 
@@ -172,7 +175,7 @@ const EditOrder = () => {
                     <tr key={selected.product}>
                       <td>{product?.name}</td>
                       <td>{selected.quantity}</td>
-                      <td>${product ? product.price * selected.quantity : 0}</td>
+                      <td>${(product ? product.price * selected.quantity : 0).toFixed(2)}</td>
                       <td>
                         <Button variant="danger" onClick={() => handleRemoveProduct(selected.product)}>
                           Remove
