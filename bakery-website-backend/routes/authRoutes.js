@@ -7,6 +7,7 @@ const authenticateToken = require('../middleware/authMiddleware');
 
 // Register a new user
 router.post('/register', async (req, res) => {
+    console.log("Creating a new user")
     const { name, email, password, role, staffRole } = req.body;
 
     try {
@@ -15,8 +16,22 @@ router.post('/register', async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = new User({ name, email, password: hashedPassword, role, staffRole });
-        await user.save();
+        // Set up user data, only including staffRole if role is 'staff'
+        const userData ={
+            name,
+            email,
+            password: hashedPassword,
+            role,
+            staffRole: role === 'staff' ? staffRole : undefined // Only include staffRole if role is 'staff'
+        }
+
+        const user = new User(userData);
+        
+        try{
+            await user.save();
+        } catch (err) {
+            console.log("Error: ", err)
+        }
 
         res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {

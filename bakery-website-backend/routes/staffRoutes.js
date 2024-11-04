@@ -12,7 +12,7 @@ router.post('/staff', async (req, res) => {
             email,
             password,
             role: 'staff',
-            staffRole
+            staffRole,
         });
         await newStaff.save();
         res.status(201).json(newStaff);
