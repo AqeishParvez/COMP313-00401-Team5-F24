@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ResetPassword from './pages/ResetPassword';
 import Products from './pages/Products';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProductDetails from './pages/ProductDetails';
@@ -12,6 +13,7 @@ import EditOrder from './components/EditOrder';
 import Cart from './components/Cart';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { OrdersProvider } from './contexts/OrdersContext';
 import ManageStaff from './components/StaffManagement';
 import ManageInventory from './components/ProductManagement';
 import ManageOrders from './components/OrderManagement';
@@ -23,6 +25,7 @@ const App = () => {
     <div>
       <AuthProvider>
         <CartProvider>
+        <OrdersProvider>
           {/* Navbar will always be rendered */}
           <Navbar/>
 
@@ -30,6 +33,7 @@ const App = () => {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             <Route path="/products" element={<Products/>} />
             <Route path="/products/:id" element={<ProductDetails />} />
@@ -60,6 +64,7 @@ const App = () => {
             <Route path="/" element={<Products />} />
             <Route path="/account" element={<Register mode={"edit-account"} />} />
           </Routes>
+          </OrdersProvider>
         </CartProvider>
       </AuthProvider>
     </div>

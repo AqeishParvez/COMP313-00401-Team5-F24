@@ -4,59 +4,64 @@ import { Navbar, Nav, NavDropdown, Button } from 'react-bootstrap';
 import { getUserInfo } from '../helpers/utils';
 import { useCart } from '../contexts/CartContext';
 
-
 const CustomNavbar = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const { setCart, fetchCart, itemCount } = useCart();
 
-  // Fetch user info whenever the component mounts or localStorage changes
   useEffect(() => {
     const fetchUserInfo = async () => {
-      const userInfo = await getUserInfo();
-      setUser(userInfo);  // Set user info (name, role)
+      try {
+        const userInfo = await getUserInfo();
+        setUser(userInfo);
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+      }
     };
 
     fetchUserInfo();
 
-    // Add an event listener to localStorage changes to trigger re-render on login/logout
-    const handleStorageChange = (kw) => {
-      fetchUserInfo();
+    const handleStorageChange = (event) => {
+      if (event.key === 'token') fetchUserInfo();
     };
 
     window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Fetch cart and item count whenever there are any changes to cart or user
   useEffect(() => {
     const refreshCart = async () => {
-      await fetchCart();
-  };
+      try {
+        await fetchCart();
+      } catch (error) {
+        console.error('Error fetching cart:', error);
+      }
+    };
 
     refreshCart();
   }, [user]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    setUser(null);  // Reset user info
-    setCart([]);  // Clear cart upon logout (using setCart function from CartContext)
-    navigate('/login');
+    if (window.confirm('Are you sure you want to log out?')) {
+      localStorage.removeItem('token');
+      setUser(null);
+      setCart([]);
+      navigate('/login');
+    }
   };
-
-  const handleAccount = () => {
-    console.log("Account Info");
-
-    navigate('/account')
-  }
 
   const handleCartClick = async () => {
-    await fetchCart(); // Fetch cart before navigating to /cart
+    await fetchCart();
     navigate('/cart');
   };
+
+  const renderManagerLinks = () => (
+    <>
+      <Nav.Link as={Link} to="/manage-staff">Manage Staff</Nav.Link>
+      <Nav.Link as={Link} to="/manage-products">Manage Products</Nav.Link>
+      <Nav.Link as={Link} to="/manager-dashboard">Manager Dashboard</Nav.Link>
+    </>
+  );
 
   return (
     <Navbar bg="light" expand="lg">
@@ -65,30 +70,25 @@ const CustomNavbar = () => {
       <Navbar.Collapse id="basic-navbar-nav">
         <Nav className="ms-auto">
           <Nav.Link as={Link} to="/products">Products</Nav.Link>
-          {user? (
-            <>
-              <Nav.Link as={Link} to="/orders">Manage Orders</Nav.Link>
-            </>
-          ) : null }
-
-          {user?.role === 'manager' && (
-            <>
-              <Nav.Link as={Link} to="/manage-staff">Manage Staff</Nav.Link>
-              <Nav.Link as={Link} to="/manage-products">Manage Products</Nav.Link>
-              <Nav.Link as={Link} to="/manager-dashboard">Manager Dashboard</Nav.Link>
-            </>
+          {user && <Nav.Link as={Link} to="/orders">Manage Orders</Nav.Link>}
+          {user?.role === 'manager' && renderManagerLinks()}
+          {user?.role === 'customer' && (
+            <Nav.Link
+              onClick={handleCartClick}
+              style={
+                itemCount
+                  ? { fontWeight: 'bold', color: '#007bff', border: '2px solid #007bff', borderRadius: '5px', padding: '5px 10px', background: '#e3f2fd' }
+                  : { fontWeight: 'normal', color: '#cccccc' }
+              }
+            >
+              Cart {itemCount ? `(x${itemCount})` : `(Empty)`}
+            </Nav.Link>
           )}
-          
-          {user && user.role === 'customer' && (
-            <Nav.Link onClick={handleCartClick} style={itemCount!=0 ? {fontWeight: 'bold', color: '#007bff', border: '2px solid #007bff', borderRadius: '5px', padding: '5px 10px', background: '#e3f2fd'} : {fontWeight: 'normal', color: '#cccccc'}}>Cart {(itemCount? `(x${itemCount})` : `(Empty)`)} </Nav.Link>
-          )}
-
         </Nav>
-
         <Nav>
           {user ? (
             <NavDropdown title={user.name} id="user-dropdown">
-              <NavDropdown.Item onClick={handleAccount}>My Account</NavDropdown.Item>
+              <NavDropdown.Item onClick={() => navigate('/account')}>My Account</NavDropdown.Item>
               <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
             </NavDropdown>
           ) : (
@@ -102,7 +102,5 @@ const CustomNavbar = () => {
     </Navbar>
   );
 };
-
-
 
 export default CustomNavbar;

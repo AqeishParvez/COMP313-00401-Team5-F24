@@ -135,30 +135,29 @@ router.post("/update", authenticateToken, async (req, res) => {
 });
 
 // Update password
-router.patch("/update-password", async (req, res) => {
-  const { email, newPassword } = req.body;
+// reset password with name and email verification
+router.patch("/reset-password", async (req, res) => {
+  const { name, email, newPassword } = req.body;
 
-  if (!email || !newPassword) {
-    return res
-      .status(400)
-      .json({ message: "Email and new password are required" });
+  if (!name || !email || !newPassword) {
+    return res.status(400).json({ message: "Name, email, and new password are required." });
   }
 
   try {
-    // Find the user by email
-    const user = await User.findOne({ email });
+    // find user by name and email
+    const user = await User.findOne({ name, email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found. Please verify the details." });
     }
 
-    // Hash the new password
+    // hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
 
-    // Save the updated user
+    // save updated user
     await user.save();
 
-    res.status(200).json({ message: "Password updated successfully" });
+    res.status(200).json({ message: "Password reset successfully. Please login." });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

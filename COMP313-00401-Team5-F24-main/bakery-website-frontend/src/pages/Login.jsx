@@ -37,6 +37,10 @@ const Login = () => {
     }
   };
 
+  const handelResetPassword = () =>{
+    navigate("/reset-password")
+  }
+
   return (
     <div>
       <h2>Login</h2>
@@ -51,6 +55,7 @@ const Login = () => {
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
         <button type="submit">Login</button>
+        <button onClick={handelResetPassword}>reset password</button>
       </form>
     </div>
   );

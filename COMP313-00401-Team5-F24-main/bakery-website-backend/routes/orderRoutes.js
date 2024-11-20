@@ -116,11 +116,7 @@ const orderChangeAllowed = async (orderId, role) => {
     return false;
   }
 
-  if (order.status === "confirmed" && role !== "customer") {
-    return true;
-  }
-
-  if (order.status === "pending") {
+  if (order.status === "confirmed" && role !== "customer" || order.status === "pending" || order.status === "ready") {
     return true;
   }
 
@@ -228,7 +224,7 @@ router.patch("/:id", authenticateToken, async (req, res) => {
 
   const { status, assignedStaff, products } = req.body;
 
-  if (!["pending", "confirmed", "completed"].includes(status)) {
+  if (!["pending", "confirmed", "ready", "completed"].includes(status)) {
     return res.status(400).json({ message: "Invalid status" });
   }
 

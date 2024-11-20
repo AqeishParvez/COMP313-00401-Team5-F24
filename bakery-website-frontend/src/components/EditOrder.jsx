@@ -104,6 +104,7 @@ const EditOrder = () => {
               >
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
+                <option value="ready">Ready</option>
                 <option value="completed">Completed</option>
               </Form.Control>
             </Form.Group>
