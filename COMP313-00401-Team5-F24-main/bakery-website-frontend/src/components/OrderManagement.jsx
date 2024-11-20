@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, Button } from 'react-bootstrap';
+import { Table, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const OrderManagement = () => {
   const { getAuthHeader } = useAuth();
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [staffList, setStaffList] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,6 +22,7 @@ const OrderManagement = () => {
     try {
       const response = await axios.get('http://localhost:5001/api/orders', getAuthHeader());
       setOrders(response.data);
+      setFilteredOrders(response.data); // Initialize filteredOrders with all orders
     } catch (err) {
       console.error('Error fetching orders:', err);
     }
@@ -51,9 +54,44 @@ const OrderManagement = () => {
     }
   };
 
+  // debounced search functionality
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (!searchTerm) {
+        setFilteredOrders(orders);
+      } else {
+        const lowerCaseSearchTerm = searchTerm.toLowerCase();
+        const filtered = orders.filter((order) => {
+          return (
+            (order.customer?.name || '').toLowerCase().includes(lowerCaseSearchTerm) ||
+            (order.status || '').toLowerCase().includes(lowerCaseSearchTerm) ||
+            (order.products.some((product) =>
+              product.product.name.toLowerCase().includes(lowerCaseSearchTerm)
+            )) ||
+            (order.assignedStaff?.name || '').toLowerCase().includes(lowerCaseSearchTerm) ||
+            order.totalPrice.toString().includes(lowerCaseSearchTerm)
+          );
+        });
+        setFilteredOrders(filtered);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, orders]);
+
   return (
     <div>
       <h3>Manage Orders</h3>
+
+      {/* Search Bar */}
+      <Form.Control
+        type="text"
+        placeholder="Search orders..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="my-3"
+      />
+
       <Table striped bordered hover className="mt-4">
         <thead>
           <tr>
@@ -66,7 +104,7 @@ const OrderManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <tr key={order._id}>
               <td>{order.customer?.name}</td>
               <td>{order.status}</td>

@@ -228,7 +228,7 @@ router.patch("/:id", authenticateToken, async (req, res) => {
 
   const { status, assignedStaff, products } = req.body;
 
-  if (!["pending", "confirmed", "completed"].includes(status)) {
+  if (!["pending", "confirmed", "ready", "completed"].includes(status)) {
     return res.status(400).json({ message: "Invalid status" });
   }
 
