@@ -9,7 +9,7 @@ const UserSchema = new mongoose.Schema({
         type: String, 
         enum: ['baker', 'front desk', 'buyer'],
         required: false  // We'll handle this requirement with a pre-save hook
-    }
+    },
 });
 
 // Pre-save hook to check if staffRole is required
