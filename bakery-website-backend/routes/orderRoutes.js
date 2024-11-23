@@ -47,6 +47,17 @@ router.post('/',authenticateToken, checkRole(['customer']), async (req, res) => 
                 return res.status(404).json({ message: `Product with ID ${item.product} not found` });
             }
 
+            // Check for product quantity scenarios
+            if (item.quantity <= 0) {
+                console.log("Product Quantity: ", item.quantity);
+                return res.status(400).json({ message: 'Product quantity must be greater than 0' });
+            } else if (item.quantity > product.quantity) {
+                return res.status(400).json({ message: `Only ${product.quantity} units of ${product.name} available` });
+            } else {
+                product.quantity -= item.quantity;
+                await product.save();
+            }
+
             productDetails.push({ product: product._id, quantity: item.quantity });
             totalPrice += product.price * item.quantity;
         }

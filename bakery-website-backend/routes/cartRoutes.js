@@ -73,12 +73,33 @@ router.post('/checkout', authenticateToken, checkRole(['customer']), async (req,
       if (!cart || cart.products.length === 0) {
         return res.status(400).json({ message: 'Cart is empty' });
       }
-  
+
       // Map cart products to order products format
       const orderProducts = cart.products.map(item => ({
         product: item.product._id,
         quantity: item.quantity
       }));
+
+      
+
+      // For each product in the cart, check if the quantity is available
+      for (let item of cart.products) {
+        const product = await Product.findById(item.product._id);
+        if (!product) {
+          return res.status(404).json({ message: `Product with ID ${item.product._id} not found` });
+        }
+
+        // Check for product quantity scenarios
+        if (product.quantity <= 0) {
+          console.log("Product Quantity: ", product.quantity);
+          return res.status(400).json({ message: 'Product not in stock' });
+        } else if (product.quantity < item.quantity) {
+          return res.status(400).json({ message: `Only ${product.quantity} units of ${product.name} available` });
+        } else {
+          product.quantity -= item.quantity;
+          await product.save();
+        }
+      }
   
       // Create the order
       const newOrder = new Order({

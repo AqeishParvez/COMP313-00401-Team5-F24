@@ -31,6 +31,8 @@ const Products = () => {
               <Card.Body>
                 <Card.Title>{product.name}</Card.Title>
                 <Card.Text>${product.price}</Card.Text>
+                {/* Show product availability or quantity */}
+                <Card.Text>{product.quantity > 0 ? `In Stock: ${product.quantity}` : 'Out of Stock'}</Card.Text>
 
                 <Button
                   variant="primary"

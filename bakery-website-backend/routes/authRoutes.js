@@ -116,8 +116,6 @@ router.post('/update', authenticateToken, async (req, res) => {
     user.email = email;
     // user.password = password;
     user.role = role;
-    // user.staffRole = staffRole;
-    console.log('User:', user);  // Debugging
 
     try {
         await user.save();

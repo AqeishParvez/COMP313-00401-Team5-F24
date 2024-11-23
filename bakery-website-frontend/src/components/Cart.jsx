@@ -23,7 +23,7 @@ const Cart = () => {
       alert('Order successfully Placed!');
       navigate('/orders');
     } catch (error) {
-      alert('Checkout failed. Please try again.');
+      alert('Checkout failed: ' + error.response.data.message);
     }
   };
 
