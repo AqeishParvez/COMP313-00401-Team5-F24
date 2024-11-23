@@ -18,6 +18,7 @@ const OrderSchema = new mongoose.Schema({
         required: true
     },
     totalPrice: { type: Number },
+    priority: { type: Number, default: 0 }, // Lower number means higher priority
     createdAt: { type: Date, default: Date.now }
 });
 

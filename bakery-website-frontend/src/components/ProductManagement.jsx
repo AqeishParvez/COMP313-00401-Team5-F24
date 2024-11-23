@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const ProductManagement = () => {
   const { getAuthHeader } = useAuth();
+  const { userRole } = useAuth();
   const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({ name: '', description: '', price: 0, quantity: 0 });
   const [editingProduct, setEditingProduct] = useState(null); // Holds the product being edited
@@ -19,6 +20,7 @@ const ProductManagement = () => {
     try {
       const response = await axios.get('http://localhost:5001/api/products', getAuthHeader());
       setProducts(response.data);
+      console.log('Products:', response.data);
     } catch (err) {
       console.error('Error fetching products:', err);
     }
@@ -58,6 +60,10 @@ const ProductManagement = () => {
       setEditingProduct(null);
     } catch (err) {
       console.error('Error updating product:', err);
+      // Display message from the server if available in an alert
+      if (err.response && err.response.data && err.response.data.message) {
+        alert(err.response.data.message);
+      }
     }
   };
 
@@ -141,6 +147,7 @@ const ProductManagement = () => {
             <th>Description</th>
             <th>Price</th>
             <th>Quantity</th>
+            <th>Availability</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -151,9 +158,14 @@ const ProductManagement = () => {
               <td>{product.description}</td>
               <td>${product.price}</td>
               <td>{product.quantity}</td>
+              {/* Display available if true otherwise show out of stock */}
+              <td>{product.availability ? 'Available' : 'Out of Stock'}</td>
               <td>
                 <Button variant="warning" onClick={() => handleEditProduct(product)}>Edit</Button>{' '}
-                <Button variant="danger" onClick={() => handleDeleteProduct(product._id)}>Delete</Button>
+                {/* Make delete button disabled if userRole is staff */}
+                <Button variant="danger" onClick={() => handleDeleteProduct(product._id)} disabled={userRole === 'staff'}>
+                  Delete
+                </Button>
               </td>
             </tr>
           ))}
@@ -173,6 +185,7 @@ const ProductManagement = () => {
                 <Form.Control
                   type="text"
                   name="name"
+                  readOnly={userRole === 'staff'} // Make field read-only if userRole is staff
                   placeholder="Enter product name"
                   value={editingProduct.name}
                   onChange={(e) => handleInputChange(e, setEditingProduct)}
@@ -185,6 +198,7 @@ const ProductManagement = () => {
                 <Form.Control
                   type="text"
                   name="description"
+                  readOnly={userRole === 'staff'} // Make field read-only if userRole is staff
                   placeholder="Enter product description"
                   value={editingProduct.description}
                   onChange={(e) => handleInputChange(e, setEditingProduct)}
@@ -198,6 +212,7 @@ const ProductManagement = () => {
                   type="number"
                   name="price"
                   placeholder="Enter product price"
+                  readOnly={userRole === 'staff'} // Make field read-only if userRole is staff
                   value={editingProduct.price}
                   onChange={(e) => handleInputChange(e, setEditingProduct)}
                   required

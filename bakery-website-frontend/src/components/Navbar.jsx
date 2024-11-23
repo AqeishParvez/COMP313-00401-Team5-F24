@@ -78,6 +78,14 @@ const CustomNavbar = () => {
               <Nav.Link as={Link} to="/manager-dashboard">Manager Dashboard</Nav.Link>
             </>
           )}
+
+          {
+            user && user.role === 'staff' && (
+              <>
+              <Nav.Link as={Link} to="/manage-products">Manage Products</Nav.Link>
+              </>
+            )
+          }
           
           {user && user.role === 'customer' && (
             <Nav.Link onClick={handleCartClick} style={itemCount!=0 ? {fontWeight: 'bold', color: '#007bff', border: '2px solid #007bff', borderRadius: '5px', padding: '5px 10px', background: '#e3f2fd'} : {fontWeight: 'normal', color: '#cccccc'}}>Cart {(itemCount? `(x${itemCount})` : `(Empty)`)} </Nav.Link>

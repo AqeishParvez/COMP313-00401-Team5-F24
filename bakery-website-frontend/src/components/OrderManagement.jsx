@@ -59,6 +59,7 @@ const OrderManagement = () => {
           <tr>
             <th>Customer</th>
             <th>Status</th>
+            <th>Priority</th>
             <th>Products</th>
             <th>Assigned Staff</th>
             <th>Total Price</th>
@@ -70,6 +71,7 @@ const OrderManagement = () => {
             <tr key={order._id}>
               <td>{order.customer?.name}</td>
               <td>{order.status}</td>
+              <td>{order.priority}</td>
               <td>
                 {order.products.map((product) => (
                   <span key={product.product._id}>

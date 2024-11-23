@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 // Create a new product (restricted to staff and manager roles)
 router.post('/', authenticateToken, async (req, res) => {
     if (req.user.role !== 'manager') {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(403).json({ message: 'Only managers can add new products' });
     }
   
     const { name, price, description, availability, quantity } = req.body;
@@ -38,20 +38,28 @@ router.post('/', authenticateToken, async (req, res) => {
 
 // Update a product (restricted to staff and manager roles)
 router.patch('/:id', authenticateToken, async (req, res) => {
-    if (req.user.role !== 'manager') {
-      return res.status(403).json({ message: 'Access denied' });
+    if (req.user.role !== 'manager' && req.user.role !== 'staff') {
+      return res.status(403).json({ message: 'Only managers and staff can update products' });
     }
   
     try {
       const product = await Product.findById(req.params.id);
       if (!product) return res.status(404).json({ message: 'Product not found' });
   
-      if (req.body.name) product.name = req.body.name;
-      if (req.body.price) product.price = req.body.price;
-      if (req.body.description) product.description = req.body.description;
-      if (req.body.availability !== undefined) product.availability = req.body.availability;
-      if (req.body.quantity !== undefined) product.quantity = req.body.quantity;  // Update quantity
-  
+      // Managers can update all fields, staff can update only availability and quantity
+      if (req.user.role === 'manager'){
+        if (req.body.name) product.name = req.body.name;
+        if (req.body.price) product.price = req.body.price;
+        if (req.body.description) product.description = req.body.description;
+        if (req.body.availability !== undefined) product.availability = req.body.availability;
+        if (req.body.quantity !== undefined) product.quantity = req.body.quantity;  // Update quantity
+      }
+
+      if (req.user.role === 'staff'){
+        if (req.body.availability !== undefined) product.availability = req.body.availability;
+        if (req.body.quantity !== undefined) product.quantity = req.body.quantity;  // Update quantity
+      }
+      
       const updatedProduct = await product.save();
       res.json(updatedProduct);
     } catch (err) {

@@ -66,22 +66,42 @@ router.post('/',authenticateToken, checkRole(['customer']), async (req, res) => 
 
 // Get all orders (staff and managers only)
 router.get('/', authenticateToken, async (req, res) => {
+    // Fetch orders only for the logged-in customer
     if (req.user.role === 'customer') {
-        // Fetch only this customer's orders
         const orders = await Order.find({ customer: req.user.id })
         .populate('customer', 'name')
         .populate('products.product', 'name')
         .populate('assignedStaff', 'name');
         return res.json(orders);
-    }
-    // Fetch all orders for staff and manager
-    if (req.user.role === 'staff' || req.user.role === 'manager') {
+    } else if (req.user.role === 'manager') {
+        // Fetch all orders for manager
         const orders = await Order.find()
         .populate('customer', 'name')
         .populate('products.product', 'name')
         .populate('assignedStaff', 'name');
         return res.json(orders);
+    } else if (req.user.role === 'staff') {
+        // If logged in staff is 'front desk' they can see all orders
+        // Search logged in user ing the database using the user id and check if the staff role is 'front desk'
+        
+        const user = await User.findById(req.user.id);
+        console.log("User: ", user);
+        if (user.staffRole === 'front desk') {
+            const orders = await Order.find()
+            .populate('customer', 'name')
+            .populate('products.product', 'name')
+            .populate('assignedStaff', 'name');
+            return res.json(orders);
+        } else {
+            // Fetch orders assigned to the logged-in staff
+            const orders = await Order.find({ assignedStaff: req.user.id })
+            .populate('customer', 'name')
+            .populate('products.product', 'name')
+            .populate('assignedStaff', 'name');
+            return res.json(orders);
+        };
     }
+
     res.status(403).json({ message: 'Access denied' });
 });
 
@@ -111,7 +131,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
         return res.status(403).json({ message: 'Access denied' });
     }
 
-    const { status, assignedStaff, products } = req.body;
+    const { status, assignedStaff, products, priority } = req.body;
 
     if (!['pending', 'confirmed', 'completed'].includes(status)) {
         return res.status(400).json({ message: 'Invalid status' });
@@ -129,6 +149,11 @@ router.patch('/:id', authenticateToken, async (req, res) => {
         if (req.user.role === 'staff' || req.user.role === 'manager') {
             order.status = status;
             order.assignedStaff = assignedStaff;
+        }
+
+        // Update order priority if role is manager
+        if (req.user.role === 'manager') {
+            order.priority = priority;
         }
 
         // Update products and calculate total price
@@ -203,10 +228,5 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-
-
-
-
-
 
 module.exports = router;

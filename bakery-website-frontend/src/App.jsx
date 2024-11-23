@@ -35,19 +35,19 @@ const App = () => {
             <Route path="/products/:id" element={<ProductDetails />} />
 
             <Route path="/manager-dashboard" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={['manager']}>
                 <ManagerDashboard />
                 </ProtectedRoute>
               } />
 
             <Route path="/manage-staff" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={['manager']}>
                 <ManageStaff />
                 </ProtectedRoute>
             } />
 
-            <Route path="/manage-products" element={
-              <ProtectedRoute>
+            <Route path="/manage-products" requiredRoles={['manager', 'staff']} element={
+              <ProtectedRoute requiredRoles={['manager', 'staff']}>
                 <ManageInventory />
               </ProtectedRoute>
             } />

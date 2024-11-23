@@ -25,7 +25,7 @@ const EditOrder = () => {
     try {
       const response = await axios.get(`http://localhost:5001/api/orders/${orderId}`, getAuthHeader());
       setOrder(response.data);
-      setSelectedProducts(response.data.products.map(p => ({ product: p.product._id, quantity: p.quantity })));
+      setSelectedProducts(response.data.products.map(p => ({ product: p.product._id, quantity: p.quantity, priority: p.priority })));
     } catch (err) {
       console.error('Error fetching order details:', err);
     }
@@ -122,6 +122,19 @@ const EditOrder = () => {
                     <option key={staff._id} value={staff._id}>{staff.name}</option>
                   ))}
                 </Form.Control>
+              </Form.Group>
+            )}
+
+            {/* If signed in user is manager allow them to see order priority in numbers with 0 being default and update it */}
+            {userRole === 'manager' && (
+              <Form.Group controlId="priority">
+                <Form.Label>Priority</Form.Label>
+                <Form.Control
+                  type="number"
+                  min="0"
+                  value={order.priority}
+                  onChange={(e) => setOrder(prev => ({ ...prev, priority: parseInt(e.target.value) || 0 }))}
+                />
               </Form.Group>
             )}
 
