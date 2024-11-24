@@ -130,6 +130,13 @@ router.get('/', authenticateToken, async (req, res) => {
 
 // Get order details by ID (staff, managers and order creator customer only)
 router.get('/:id', authenticateToken, async (req, res) => {
+    // Check if the order exists
+    const orderExists = await Order.exists({ _id: req.params.id });
+
+    if (!orderExists) {
+        return res.status(404).json({ message: 'Order not found' });
+    }
+
     const isAuthorized = req.user.role === 'staff' || req.user.role === 'manager' || req.user.id === await getOrderCreatorId(req.params.id);
     if (!isAuthorized) {
         return res.status(403).json({ message: 'Access denied' });
@@ -253,7 +260,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
     // if order status is not pending, it cannot be deleted
     if (order.status !== 'pending') {
-        return res.status(400).json({ message: 'Order is in progress and cannot be deleted now' });
+        return res.status(400).json({ message: 'Order is in progress and cannot be cancelled now' });
     }
 
     try {
@@ -270,7 +277,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         if (!deletedOrder) return res.status(404).json({ message: 'Order not found' });
 
         // Notify the customer that the order has been deleted
-        notifyUser(deletedOrder.customer._id, order, 'customer', `Order# ${deletedOrder._id} has been deleted`, 'order_update');
+        notifyUser(deletedOrder.customer._id, order, 'customer', `Order# ${deletedOrder._id} has been cancelled`, 'order_update');
 
         res.json(deletedOrder);
     } catch (err) {
