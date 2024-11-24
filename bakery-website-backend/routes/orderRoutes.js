@@ -231,6 +231,15 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 
     try {
+        // Update product quantities and delete the order
+        for (const item of order.products) {
+            const product = await Product
+                .findById(item.product)
+                .select('quantity');
+            product.quantity += item.quantity;
+            await product.save();
+        }
+        
         const deletedOrder = await Order.findByIdAndDelete(req.params.id);
         if (!deletedOrder) return res.status(404).json({ message: 'Order not found' });
 

@@ -9,7 +9,10 @@ const Products = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
       try {
         const response = await axios.get('http://localhost:5001/api/products');
         setProducts(response.data);
@@ -17,9 +20,6 @@ const Products = () => {
         console.error('Error fetching products:', error);
       }
     };
-
-    fetchProducts();
-  }, []);
 
   return (
     <Container>
@@ -31,13 +31,18 @@ const Products = () => {
               <Card.Body>
                 <Card.Title>{product.name}</Card.Title>
                 <Card.Text>${product.price}</Card.Text>
-                {/* Show product availability or quantity */}
-                <Card.Text>{product.quantity > 0 ? `In Stock: ${product.quantity}` : 'Out of Stock'}</Card.Text>
+                {/* Show product availability or quantity. Show out of stock in red*/}
+                <Card.Text>{product.quantity > 0 ? `In Stock: ${product.quantity}` : <span className='text-danger'>Out of Stock</span>}</Card.Text>
 
                 <Button
                   variant="primary"
                   onClick={() => {
-                    addToCart(product, 1);
+                    // Add the product to cart if available
+                    if (product.quantity > 0) {
+                      addToCart(product, 1);
+                    } else {
+                      alert('Product is out of stock');
+                    }
                   }}
                 >
                   Add to Cart

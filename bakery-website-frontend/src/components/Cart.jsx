@@ -34,6 +34,8 @@ const Cart = () => {
         <p>Your cart is empty</p>
       ) : (
         <>
+        <p>You have {cart.length} items in your cart.</p>
+        <p className='text-danger'>Items will only stay in cart for 30 minutes before the order is placed.</p>
         <Table striped bordered hover>
           <thead>
             <tr>
@@ -60,7 +62,7 @@ const Cart = () => {
             ))}
             <tr>
               <td colSpan="3" className="text-right"><strong>Total Price:</strong></td>
-              <td colSpan="2"><strong>${calculateTotalPrice()}</strong></td>
+              <td colSpan="2"><strong>${calculateTotalPrice().toFixed(2)}</strong></td>
             </tr>
           </tbody>
         </Table>

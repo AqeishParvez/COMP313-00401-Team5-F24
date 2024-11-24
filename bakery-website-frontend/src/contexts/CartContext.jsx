@@ -45,6 +45,7 @@ export const CartProvider = ({ children }) => {
       );
       setCart(response.data); // Update cart with the new state from backend
       alert('Item added to cart');
+      window.location.reload();
       fetchCart();
     } catch (error) {
         // display message received from the server
@@ -73,6 +74,7 @@ export const CartProvider = ({ children }) => {
       return response.data; // Return order details if needed
     } catch (error) {
       console.error('Error during checkout:', error);
+      window.location.reload();
       throw error; // Rethrow the error to handle it in the component
     }
   };
