@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const cleanupExpiredReservations = require('./middleware/reservationCleanup');
 
 // Initialize the app
 const app = express();
@@ -40,6 +41,8 @@ app.use('/api', staffRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/notifications', notificationRoutes);
 
+// Cleanup expired reservations every 30 minutes
+setInterval(cleanupExpiredReservations, 1000 * 60 * 30);
 
 // Start the server
 const PORT = process.env.PORT || 5001;

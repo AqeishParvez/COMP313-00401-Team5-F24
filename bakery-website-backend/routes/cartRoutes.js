@@ -4,6 +4,7 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const authenticateToken = require('../middleware/authMiddleware');
 const checkRole = require('../middleware/roleMiddleware');
+const ProductTimeout = require('../models/ProductTimeout');
 
 const router = express.Router();
 
@@ -24,149 +25,127 @@ router.get('/', authenticateToken, checkRole(['customer']), async (req, res) => 
 // Add to Cart
 router.post('/', authenticateToken, checkRole(['customer']), async (req, res) => {
   const { productId, quantity, userId } = req.body;
-  console.log("User ID: ", userId);
 
   try {
-      let cart = await Cart.findOne({ userId: userId });
-      if (!cart) {
-          // Create a new cart if it doesn't exist
-          cart = new Cart({ userId: userId, products: [] });
-      }
-
-      // Check if product is already in the cart
-      const existingProduct = cart.products.find((p) => p.product.toString() === productId);
-      if (existingProduct) {
-          existingProduct.quantity += quantity;
-      } else {
-          console.log("Product not in cart");
-          cart.products.push({ product: productId, quantity });
-      }
-
-      // Temporarily update quantity for the product in the database
       const product = await Product.findById(productId);
-      if (!product) return res.status(404).json({ message: 'Product not found' });
-
-      if (product.quantity < quantity) {
+      if (!product || product.quantity < quantity) {
           return res.status(400).json({ message: 'Insufficient stock' });
       }
 
+      // Deduct quantity from product stock
       product.quantity -= quantity;
       await product.save();
 
-      // Setup a timeout to reset the quantity and clean up the cart
-      productTimeouts.set(
-          productId,
-          setTimeout(async () => {
-              const updatedProduct = await Product.findById(productId);
-              if (updatedProduct) {
-                  updatedProduct.quantity += quantity;
-                  await updatedProduct.save();
-              }
+      // Create or update ProductTimeout
+      const expiryTime = new Date(Date.now() + timeoutDuration);
+      const existingTimeout = await ProductTimeout.findOne({ productId, userId });
 
-              // Remove the product from all carts where it's still present
-              await Cart.updateMany(
-                  { 'products.product': productId },
-                  { $pull: { products: { product: productId } } }
-              );
+      if (existingTimeout) {
+          existingTimeout.quantity += quantity;
+          existingTimeout.expiryTime = expiryTime;
+          await existingTimeout.save();
+      } else {
+          await ProductTimeout.create({ productId, userId, quantity, expiryTime });
+      }
 
-              productTimeouts.delete(productId);
-          }, timeoutDuration) // Adjust this timeout duration as needed
-      );
+      // Update cart
+      let cart = await Cart.findOne({ userId });
+      if (!cart) cart = new Cart({ userId, products: [] });
+
+      const existingProduct = cart.products.find(p => p.product.toString() === productId);
+      if (existingProduct) {
+          existingProduct.quantity += quantity;
+      } else {
+          cart.products.push({ product: productId, quantity });
+      }
 
       await cart.save();
       res.json(cart.products);
   } catch (error) {
-      console.log("Error adding to cart", error);
+      console.error("Error adding to cart", error);
       res.status(500).json({ message: 'Error adding to cart' });
   }
 });
 
 // Remove from Cart
 router.delete('/:productId', authenticateToken, checkRole(['customer']), async (req, res) => {
-    const { productId } = req.params;
+  const { productId } = req.params;
 
-    try {
-        const cart = await Cart.findOne({ userId: req.user.id });
-        if (!cart) return res.status(404).json({ message: 'Cart not found' });
+  try {
+      const cart = await Cart.findOne({ userId: req.user.id });
+      if (!cart) return res.status(404).json({ message: 'Cart not found' });
 
-        const productInCart = cart.products.find((p) => p.product.toString() === productId);
-        if (!productInCart) return res.status(404).json({ message: 'Product not in cart' });
+      const productInCart = cart.products.find(p => p.product.toString() === productId);
+      if (!productInCart) return res.status(404).json({ message: 'Product not in cart' });
 
-        // Update product quantity in the database immediately
-        const product = await Product.findById(productId);
-        if (product) {
-            product.quantity += productInCart.quantity;
-            await product.save();
-        }
+      // Restore product stock
+      const product = await Product.findById(productId);
+      if (product) {
+          product.quantity += productInCart.quantity;
+          await product.save();
+      }
 
-        // Clear the timeout for the product
-        if (productTimeouts.has(productId)) {
-            clearTimeout(productTimeouts.get(productId));
-            productTimeouts.delete(productId);
-            console.log(`Cleared timeout for product ${product.name}`);
-        }
+      // Remove ProductTimeout entry
+      await ProductTimeout.findOneAndDelete({ productId, userId: req.user.id });
 
-        // Remove the product from the cart
-        cart.products = cart.products.filter((p) => p.product.toString() !== productId);
-        await cart.save();
+      // Update cart
+      cart.products = cart.products.filter(p => p.product.toString() !== productId);
+      await cart.save();
 
-        res.json(cart.products);
-    } catch (error) {
-        console.error("Error removing from cart", error);
-        res.status(500).json({ message: 'Error removing from cart' });
-    }
+      res.json(cart.products);
+  } catch (error) {
+      console.error("Error removing from cart", error);
+      res.status(500).json({ message: 'Error removing from cart' });
+  }
 });
 
 // Checkout
 router.post('/checkout', authenticateToken, checkRole(['customer']), async (req, res) => {
-    try {
-        const cart = await Cart.findOne({ userId: req.user.id }).populate('products.product');
-        if (!cart || cart.products.length === 0) {
-            return res.status(400).json({ message: 'Cart is empty' });
-        }
+  try {
+      const cart = await Cart.findOne({ userId: req.user.id }).populate('products.product');
+      if (!cart || cart.products.length === 0) {
+          return res.status(400).json({ message: 'Cart is empty' });
+      }
 
-        // Map cart products to order products format
-        const orderProducts = cart.products.map(item => ({
-            product: item.product._id,
-            quantity: item.quantity
-        }));
+      const orderProducts = [];
+      for (const item of cart.products) {
+          const timeoutEntry = await ProductTimeout.findOne({ productId: item.product._id, userId: req.user.id });
+          if (!timeoutEntry || timeoutEntry.quantity < item.quantity) {
+              return res.status(400).json({ message: `Insufficient reserved stock for ${item.product.name}` });
+          }
 
-        // Validate product quantities and reduce them in the database
-        for (let item of cart.products) {
-            const product = await Product.findById(item.product._id);
-            if (!product || product.quantity < item.quantity) {
-                return res.status(400).json({ message: `Only ${product.quantity || 0} units of ${product.name || 'this product'} are available` });
-            }
-            product.quantity -= item.quantity;
-            await product.save();
+          // Confirm reserved quantity
+          timeoutEntry.quantity -= item.quantity;
+          if (timeoutEntry.quantity === 0) {
+            // As this is a mongoose model, we cannot use remove() method
+            await timeoutEntry.delete();
+          } else {
+              await timeoutEntry.save();
+          }
 
-            // Clear any pending timeout for the product and add quantity back immediately
-            if (productTimeouts.has(product._id.toString())) {
-                clearTimeout(productTimeouts.get(product._id.toString()));
-                productTimeouts.delete(product._id.toString());
-                console.log(`Cleared timeout for product ${product.name}`);
-            }
-        }
+          orderProducts.push({ product: item.product._id, quantity: item.quantity });
+      }
 
-        // Create the order
-        const newOrder = new Order({
-            customer: req.user.id,
-            products: orderProducts,
-            status: 'pending', // default status for new orders
-            createdAt: Date.now(),
-        });
+      // Create the order
+      const newOrder = new Order({
+          customer: req.user.id,
+          products: orderProducts,
+          status: 'pending',
+          createdAt: Date.now(),
+      });
 
-        await newOrder.save();
+      await newOrder.save();
 
-        // Clear the cart
-        cart.products = [];
-        await cart.save();
+      // Clear the cart
+      cart.products = [];
+      await cart.save();
 
-        res.json(newOrder);
-    } catch (error) {
-        console.error("Error during checkout", error);
-        res.status(500).json({ message: 'Error during checkout' });
-    }
+      res.json(newOrder);
+  } catch (error) {
+      console.error("Error during checkout", error);
+      res.status(500).json({ message: 'Error during checkout' });
+  }
 });
+
 
 module.exports = router;

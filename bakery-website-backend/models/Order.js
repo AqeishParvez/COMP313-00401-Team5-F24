@@ -13,7 +13,7 @@ const OrderSchema = new mongoose.Schema({
     }],
     status: { 
         type: String, 
-        enum: ['pending', 'confirmed', 'completed'], 
+        enum: ['pending', 'confirmed', 'completed'], // Next step is to add 'cancelled' and 'ready' statuses
         default: 'pending' ,
         required: true
     },
