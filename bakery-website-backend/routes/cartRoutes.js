@@ -8,7 +8,7 @@ const checkRole = require('../middleware/roleMiddleware');
 const router = express.Router();
 
 const productTimeouts = new Map(); // To track timeouts for products
-const timeoutDuration = 5000; // 30 minutes
+const timeoutDuration = 60000 * 30; // 30 minutes
 
 // Get Cart
 router.get('/', authenticateToken, checkRole(['customer']), async (req, res) => {
@@ -140,7 +140,7 @@ router.post('/checkout', authenticateToken, checkRole(['customer']), async (req,
             product.quantity -= item.quantity;
             await product.save();
 
-            // Clear any pending timeout for the product
+            // Clear any pending timeout for the product and add quantity back immediately
             if (productTimeouts.has(product._id.toString())) {
                 clearTimeout(productTimeouts.get(product._id.toString()));
                 productTimeouts.delete(product._id.toString());

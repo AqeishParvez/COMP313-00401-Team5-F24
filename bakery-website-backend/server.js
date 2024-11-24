@@ -26,6 +26,7 @@ const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const staffRoutes = require('./routes/staffRoutes');
 const cartRoutes = require('./routes/cartRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 // Set up routes
 app.get('/', (req, res) => {
@@ -37,8 +38,12 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api', staffRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 
 // Start the server
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+})

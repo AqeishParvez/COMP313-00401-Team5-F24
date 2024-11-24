@@ -35,6 +35,11 @@ const OrderManagement = () => {
     }
   };
 
+  // Navigate to Order Details page
+  const handleViewOrder = (orderId) => {
+    navigate(`/orders/details/${orderId}`);
+  };
+
   // Navigate to Edit Order page
   const handleEditOrder = (orderId) => {
     navigate(`/orders/edit/${orderId}`);
@@ -83,6 +88,7 @@ const OrderManagement = () => {
               <td>{order.assignedStaff?.name || 'Unassigned'}</td>
               <td>{(order.totalPrice).toFixed(2)}</td>
               <td>
+                <Button variant="info" onClick={() => handleViewOrder(order._id)} className="me-2">View</Button>
                 <Button variant="warning" onClick={() => handleEditOrder(order._id)}>Edit</Button>{' '}
                 <Button variant="danger" onClick={() => handleDeleteOrder(order._id)}>Cancel Order</Button>
               </td>

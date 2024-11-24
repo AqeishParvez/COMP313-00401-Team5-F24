@@ -1,10 +1,12 @@
 const express = require('express');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const Notification = require('../models/Notification.js');
 const User = require('../models/User');
 const authenticateToken = require('../middleware/authMiddleware');
 const checkRole = require('../middleware/roleMiddleware');
 const router = express.Router();
+
 
 const getOrderCreatorId = async (orderId) => {
     const order = await Order.findById(orderId).populate('customer');
@@ -27,6 +29,12 @@ const orderChangeAllowed = async (orderId, role) => {
     }
 
     return false;
+};
+
+const notifyUser = async (userId, orderId, role, message, type) => {
+    console.log("User ID: ", userId);
+    const newNotification = new Notification({ userId, orderId, role, message, type });
+    await newNotification.save();
 };
 
 // Place an order (customers only)
@@ -69,6 +77,10 @@ router.post('/',authenticateToken, checkRole(['customer']), async (req, res) => 
         });
 
         const savedOrder = await newOrder.save();
+
+        // Notify the customer that the order has been placed
+        notifyUser(req.user.id, newOrder,'customer', `Order# ${savedOrder._id} has been placed`, 'order_update');
+
         res.status(201).json(savedOrder);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -158,8 +170,22 @@ router.patch('/:id', authenticateToken, async (req, res) => {
 
         // Update status and assigned staff if role is staff or manager
         if (req.user.role === 'staff' || req.user.role === 'manager') {
+            const currentStatus = order.status;
+            const currentAssignedStaff = order.assignedStaff;
             order.status = status;
             order.assignedStaff = assignedStaff;
+
+            // Notify the customer if the order status changes
+            if (currentStatus !== status) {
+                notifyUser(await getOrderCreatorId(req.params.id), order, 'customer',`Order# ${order._id} status changed to ${status}`, 'order_update');
+            }
+
+            // Notify the assigned staff if the order is assigned to them
+            if (currentAssignedStaff !== assignedStaff) {
+                console.log("Assigned Staff: ", assignedStaff);
+                notifyUser(assignedStaff, order, 'staff',`Order# ${order._id} has been assigned to you`, 'assignment');
+            }
+
         }
 
         // Update order priority if role is manager
@@ -242,6 +268,9 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         
         const deletedOrder = await Order.findByIdAndDelete(req.params.id);
         if (!deletedOrder) return res.status(404).json({ message: 'Order not found' });
+
+        // Notify the customer that the order has been deleted
+        notifyUser(deletedOrder.customer._id, order, 'customer', `Order# ${deletedOrder._id} has been deleted`, 'order_update');
 
         res.json(deletedOrder);
     } catch (err) {

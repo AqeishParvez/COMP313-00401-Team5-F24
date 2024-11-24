@@ -83,6 +83,7 @@ const CustomNavbar = () => {
             user && user.role === 'staff' && (
               <>
               <Nav.Link as={Link} to="/manage-products">Manage Products</Nav.Link>
+              <Nav.Link as={Link} to="/staff-dashboard">Staff Dashboard</Nav.Link>
               </>
             )
           }
@@ -92,6 +93,12 @@ const CustomNavbar = () => {
           )}
 
         </Nav>
+
+        {user? (
+            <>
+              <Nav.Link as={Link} to="/notifications">Notifications</Nav.Link>
+            </>
+          ) : null }
 
         <Nav>
           {user ? (
