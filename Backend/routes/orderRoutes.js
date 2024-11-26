@@ -1,0 +1,423 @@
+const express = require("express");
+const Order = require("../models/Order");
+const Product = require("../models/Product");
+const User = require("../models/User");
+const authenticateToken = require("../middleware/authMiddleware");
+const checkRole = require("../middleware/roleMiddleware");
+const router = express.Router();
+
+const Notification = require('../models/Notification')
+
+// GET ORDER HISTORY
+router.get("/history", authenticateToken, async (req, res) => {
+  if (req.user.role === "staff" || req.user.role === "manager") {
+    const orders = await Order.find({
+      assignedStaff: req.user.id,
+      status: "completed",
+    })
+      .populate("customer", "name")
+      .populate("products.product", "name")
+      .populate("assignedStaff", "name");
+
+    if (!orders.length)
+      return res.status(404).json({ message: "Orders not found" });
+    return res
+      .status(200)
+      .json({ message: "Completed orders (Order history)", orders });
+  } else {
+    return res.status(403).json({ message: "Access denied" });
+  }
+});
+router.get("/pick-up", authenticateToken, async (req, res) => {
+  try {
+    console.log("fetching");
+    const customerId = req.user.id;
+    console.log("customer id", customerId);
+    const orders = await Order.find({
+      customer: customerId,
+      status: "confirmed",
+    }).populate("customer", "name");
+    if (!orders.length) {
+      return res.status(404).json({ message: "No orders ready for pickup" });
+    }
+    res.status(200).json({
+      message: `Order for Customer ready for pickup ${customerId}`,
+      orders,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Search orders by customer name
+router.get("/search", async (req, res) => {
+  try {
+    const { customerName } = req.query;
+
+    if (!customerName) {
+      return res
+        .status(400)
+        .json({ message: "Customer name is required for searching" });
+    }
+
+    const orders = await Order.find().populate({
+      path: "customer",
+      select: "name",
+      match: { name: { $regex: customerName, $options: "i" } }, // Case-insensitive search
+    });
+
+    // Filter out orders with no matching customer
+    const filteredOrders = orders.filter((order) => order.customer);
+
+    if (!filteredOrders.length) {
+      return res
+        .status(404)
+        .json({ message: "No orders found for the given customer name" });
+    }
+
+    res.status(200).json({ message: "Search Results", orders: filteredOrders });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Filter orders by status
+router.get("/filter", async (req, res) => {
+  try {
+    const { status } = req.query;
+
+    if (!status) {
+      return res
+        .status(400)
+        .json({ message: "Status is required for filtering" });
+    }
+
+    const orders = await Order.find({ status }).populate("customer", "name");
+
+    if (!orders.length) {
+      return res
+        .status(404)
+        .json({ message: "No orders found with the given status" });
+    }
+
+    res.status(200).json({ message: "Filter Results", orders });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+const getOrderCreatorId = async (orderId) => {
+  const order = await Order.findById(orderId).populate("customer");
+  return order.customer.id;
+};
+
+const orderChangeAllowed = async (orderId, role) => {
+  const order = await Order.findById(orderId);
+
+  if (order.status === "completed") {
+    return false;
+  }
+
+  if (order.status === "confirmed" && role !== "customer") {
+    return true;
+  }
+
+  if (order.status === "pending") {
+    return true;
+  }
+
+  return false;
+};
+
+// Place an order (customers only)
+router.post(
+  "/",
+  authenticateToken,
+  checkRole(["customer"]),
+  async (req, res) => {
+    const { products } = req.body; // Ensure this is an array
+
+    if (!Array.isArray(products) || products.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Products must be an array and cannot be empty" });
+    }
+
+    try{
+      // Create a notification for the manager about the new order
+  const notificationMessage = `New order placed by ${req.user.id} for Product: ${products.productDetails}}`;
+  const newNotification = new Notification({
+    message: notificationMessage,
+    date: Date.now()
+  });
+  const savedNotification= await newNotification.save()
+
+  res.status(201).json(savedNotification)
+
+
+  } catch(err){
+    res.status(500).json({ message: err.message })
+  }
+
+    // try {
+    //   let totalPrice = 0;
+    //   const productDetails = [];
+
+    //   for (let item of products) {
+    //     const product = await Product.findById(item.product); // Make sure the product exists
+    //     if (!product) {
+    //       return res
+    //         .status(404)
+    //         .json({ message: `Product with ID ${item.product} not found` });
+    //     }
+
+    //     productDetails.push({ product: product._id, quantity: item.quantity });
+    //     totalPrice += product.price * item.quantity;
+    //   }
+
+    //   const newOrder = new Order({
+    //     customer: req.user.id,
+    //     products: productDetails,
+    //     totalPrice,
+    //   });
+
+
+
+    //   const savedOrder = await newOrder.save();
+
+
+
+    //  ; 
+
+
+
+
+
+
+
+    //   res.status(201).json(savedOrder);
+
+      
+    
+
+
+
+    // } catch (err) {
+    //   res.status(500).json({ message: err.message });
+    // }
+
+    
+  }
+
+
+
+);
+
+// Get all orders (staff and managers only)
+router.get("/", authenticateToken, async (req, res) => {
+  if (req.user.role === "customer") {
+    // Fetch only this customer's orders
+    const orders = await Order.find({ customer: req.user.id })
+      .populate("customer", "name")
+      .populate("products.product", "name")
+      .populate("assignedStaff", "name");
+    return res.json(orders);
+  }
+  // Fetch all orders for staff and manager
+  if (req.user.role === "staff" || req.user.role === "manager") {
+    const orders = await Order.find()
+      .populate("customer", "name")
+      .populate("products.product", "name")
+      .populate("assignedStaff", "name");
+    return res.json(orders);
+  }
+  res.status(403).json({ message: "Access denied" });
+});
+
+// Get order details by ID (staff, managers and order creator customer only)
+router.get("/:id", authenticateToken, async (req, res) => {
+  const isAuthorized =
+    req.user.role === "staff" ||
+    req.user.role === "manager" ||
+    req.user.id === (await getOrderCreatorId(req.params.id));
+  if (!isAuthorized) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate("customer")
+      .populate("products.product");
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Update order status and products (staff, managers only and rest of the info for order creator customer)
+router.patch("/:id", authenticateToken, async (req, res) => {
+  console.log("Requester Role: ", req.user.role);
+  const isAuthorized =
+    req.user.role === "staff" ||
+    req.user.role === "manager" ||
+    req.user.id === (await getOrderCreatorId(req.params.id));
+  console.log("Is Authorized: ", isAuthorized);
+  if (!isAuthorized) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+
+  const { status, assignedStaff, products } = req.body;
+
+  if (!["pending", "confirmed", "completed","ready"].includes(status)) {
+    return res.status(400).json({ message: "Invalid status" });
+  }
+
+  if (!(await orderChangeAllowed(req.params.id, req.user.role))) {
+
+
+
+    return res.status(403).json({
+      message:
+        "Order status prevents changes. Please call us to see if changes can be made.",
+    });
+  }
+
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // Update status and assigned staff if role is staff or manager
+    if (req.user.role === "staff" || req.user.role === "manager") {
+      order.status = status;
+      order.assignedStaff = assignedStaff;
+    }
+
+    // Update products and calculate total price
+    order.products = products;
+
+    // Calculate total price
+    let totalPrice = 0;
+    for (const item of products) {
+      const product = await Product.findById(item.product);
+      if (product) {
+        totalPrice += product.price * item.quantity;
+      }
+    }
+    order.totalPrice = totalPrice;
+
+    const updatedOrder = await order.save();
+
+ //Create Notification
+      
+        // Create a notification for the manager about the new order
+        const ManagerNotificationMessage = `Order Status changed to ${order.status} `;
+
+        const CustomerNotificationMessage = `Order Status changed to ${order.status}  `;
+
+
+        const managerNotification = new Notification({
+        user:  req.user.id,
+        message: ManagerNotificationMessage,
+        date: Date.now(),
+        from:"System",
+        target:"Manager"
+        });
+
+        const userNotification = new Notification({
+          user:  req.user.id,
+          message: CustomerNotificationMessage,
+          date: Date.now(),
+          from:"System",
+          target:"Customer"
+          });
+    
+        try{
+          await managerNotification.save()
+
+         
+
+        }catch(err){
+          console.log(err);
+          
+        }
+
+        try{
+          await userNotification.save()
+        }
+        catch(err){
+          console.log(err);
+          
+        }
+
+    res.json(updatedOrder);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Assign staff to an order (staff and managers only)
+router.patch("/:id/assign", authenticateToken, async (req, res) => {
+  if (req.user.role !== "manager" && req.user.role !== "staff") {
+    return res
+      .status(403)
+      .json({ message: "Only staff/managers can assign orders to staff" });
+  }
+
+  const { staffId } = req.body;
+
+  try {
+    const staffMember = await User.findById(staffId);
+    if (!staffMember || staffMember.role !== "staff") {
+      return res
+        .status(404)
+        .json({ message: "Staff member not found or not a staff" });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    order.assignedStaff = staffMember._id;
+    const updatedOrder = await order.save();
+
+    res.json(updatedOrder);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Delete an order (managers only)
+router.delete("/:id", authenticateToken, async (req, res) => {
+  // find the order by id
+  const order = await Order.findById(req.params.id);
+  console.log("Order customer: ", order.customer);
+  console.log("User ID: ", req.user.id);
+
+  //check if the deletion request is from a manager or the customer who placed the order
+  if (
+    req.user.role === "customer" &&
+    order.customer.toString() !== req.user.id
+  ) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+
+  // if order status is not pending, it cannot be deleted
+  if (order.status !== "pending") {
+    return res
+      .status(400)
+      .json({ message: "Order is in progress and cannot be deleted now" });
+  }
+
+  try {
+    const deletedOrder = await Order.findByIdAndDelete(req.params.id);
+    if (!deletedOrder)
+      return res.status(404).json({ message: "Order not found" });
+
+    res.json(deletedOrder);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+module.exports = router;
