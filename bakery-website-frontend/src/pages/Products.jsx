@@ -16,6 +16,9 @@ const Products = () => {
 
   useEffect(() => {
     fetchProducts();
+    if (location.pathname === '/') {
+      fetchHighlightProducts();
+    }
   }, []);
 
   const fetchProducts = async () => {
