@@ -10,6 +10,14 @@ const UserSchema = new mongoose.Schema({
         enum: ['baker', 'front desk', 'buyer'],
         required: false  // We'll handle this requirement with a pre-save hook
     },
+    address: { type: String },
+    city: { type: String },
+    province: { type: String },
+    postalCode: { type: String },
+    phone: { type: String },
+    notificationPreferences: { type: String, enum: ['email', 'sms', 'none'], default: 'email' },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 
 // Pre-save hook to check if staffRole is required
