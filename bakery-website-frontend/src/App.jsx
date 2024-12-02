@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProductDetails from './pages/ProductDetails';
 import ManagerDashboard from './pages/ManagerDashboard';
 import StaffDashboard from './pages/StaffDashboard';
+import SendNotifications from './components/SendNotifications';
 import Navbar from './components/Navbar';
 import OrderDetails from './pages/OrderDetails';
 import EditOrder from './components/EditOrder';
@@ -59,6 +60,12 @@ const App = () => {
               <Route path="/staff-dashboard" element={
                 <ProtectedRoute requiredRoles={['manager','staff']}>
                   <StaffDashboard />
+                  </ProtectedRoute>
+              } />
+
+              <Route path="/send-notifications" element={
+                <ProtectedRoute requiredRoles={['manager', 'staff']}>
+                  <SendNotifications />
                   </ProtectedRoute>
               } />
               

@@ -5,14 +5,19 @@ const router = express.Router();
 
 // Create a new notification for managers only
 router.post('/', authenticateToken, async (req, res) => {
-    if (req.user.role !== 'manager') {
-        return res.status(403).json({ message: 'Only managers can create manual notifications' });
+    console.log("Creating a new notification")
+    if (req.user.role !== 'manager' && req.user.role !== 'staff') {
+        return res.status(403).json({ message: 'Only staff/managers can create manual notifications' });
     }
+
+    // Sender id is the manager's user id so we can just extract the user id from the request body
+    const senderId = req.user.id;
+    const role = req.user.role;
 
     const { userId, message, type = 'general' } = req.body;
 
     try {
-        const newNotification = new Notification({ userId, message, type });
+        const newNotification = new Notification({ userId, senderId, message, type, role });
         await newNotification.save();
         res.status(201).json(newNotification);
     } catch (error) {
@@ -59,6 +64,22 @@ router.delete('/read', authenticateToken, async (req, res) => {
         res.status(500).json({ message: 'Error deleting read notifications' });
     }
 });
+
+// Fetch all notifications sent by the logged-in manager
+router.get('/sent', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'manager' && req.user.role !== 'staff') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        const sentNotifications = await Notification.find({ senderId: req.user.id })
+            .populate('userId')
+            .sort({ createdAt: -1 });
+        res.json(sentNotifications);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching sent notifications' });
+    }
+});
+
 
 // Delete a notification
 router.delete('/:id', authenticateToken, async (req, res) => {
