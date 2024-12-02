@@ -18,6 +18,7 @@ import ManageStaff from './components/StaffManagement';
 import ManageInventory from './components/ProductManagement';
 import ManageOrders from './components/OrderManagement';
 import Notifications from './components/Notifications';
+import Profile from './pages/Profile';
 
 
 const App = () => {
@@ -72,7 +73,7 @@ const App = () => {
               <Route path="/orders/edit/:orderId" element={<EditOrder />} />
               
               <Route path="/" element={<Products />} />
-              <Route path="/account" element={<Register mode={"edit-account"} />} />
+              <Route path="/account" element={<Profile />} />
             </Routes>
           </CartProvider>
       </AuthProvider>

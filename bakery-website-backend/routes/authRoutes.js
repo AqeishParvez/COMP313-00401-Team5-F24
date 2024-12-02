@@ -99,7 +99,13 @@ router.get('/me', authenticateToken, async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,  // Include the role in the response
-        staffRole: user.staffRole  // Include the staff role in the response
+        staffRole: user.staffRole,  // Include the staff role in the response
+        address: user.address,
+        city: user.city,
+        province: user.province,
+        postalCode: user.postalCode,
+        phone: user.phone,
+        notificationPreferences: user.notificationPreferences
     });
 });
 
@@ -111,11 +117,25 @@ router.post('/update', authenticateToken, async (req, res) => {
 
     if (!user) return res.status(404).json({ message: 'Need to Log in!' });
 
-    const { name, email, password, role, staffRole } = req.body;
+    const { name, email, password, role, staffRole, address, city, province, postalCode, phone, notificationPreferences } = req.body;
     user.name = name;
     user.email = email;
-    // user.password = password;
-    user.role = role;
+    user.address = address;
+    user.city = city;
+    user.province = province;
+    user.postalCode = postalCode;
+    user.phone = phone;
+    user.notificationPreferences = notificationPreferences;
+
+    // Password, staff role and role are only updated if the user is a manager
+    if (req.user.role === 'manager') {
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            user.password = hashedPassword;
+        }
+        user.role = role;
+        user.staffRole = role === 'staff' ? staffRole : undefined;
+    }
 
     try {
         await user.save();
@@ -125,5 +145,29 @@ router.post('/update', authenticateToken, async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+// Change Password
+router.post('/change-password', authenticateToken, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) return res.status(400).json({ message: 'Current password is incorrect' });
+
+        console.log("Matching result: ", isMatch)
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+
+        res.json({ message: 'Password changed successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 
 module.exports = router;
