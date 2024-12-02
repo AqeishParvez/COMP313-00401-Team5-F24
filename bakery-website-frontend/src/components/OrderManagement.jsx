@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Table, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTable, useSortBy } from 'react-table'; 
+
 
 const OrderManagement = () => {
   const { getAuthHeader } = useAuth();
@@ -82,6 +84,40 @@ const OrderManagement = () => {
     }
   };
 
+  const columns = React.useMemo(
+    () => [
+      { Header: 'Customer',
+        accessor: 'customer.name',},
+      { Header: 'Status',
+        accessor: 'status',},
+      {  Header: 'Priority',
+        accessor: 'priority',},
+      { Header: 'Products',
+        accessor: 'products',
+        Cell: ({ row }) => row.original.products.map(product => `${product.product.name} (x${product.quantity})`).join(', '),},
+      { Header: 'Assigned Staff',
+        accessor: 'assignedStaff.name',},
+      { Header: 'Total Price',
+        accessor: 'totalPrice',
+        Cell: ({ value }) => value.toFixed(2),},
+      { Header: 'Actions',
+        Cell: ({ row }) => (
+          <>
+            <Button variant="info" onClick={() => handleViewOrder(row.original._id)} className="me-2">View</Button>
+            <Button variant="warning" onClick={() => handleEditOrder(row.original._id)}>Edit</Button>
+            <Button variant="danger" onClick={() => handleDeleteOrder(row.original._id)}>Cancel Order</Button>
+          </>
+        ),},
+    ],
+    []
+  );
+
+  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, state: { sortBy } } = useTable(
+    { columns, data: orders },
+    useSortBy
+  );
+
+  
   return (
     <div>
       <h3>Manage Orders</h3>
@@ -109,41 +145,36 @@ const OrderManagement = () => {
 
       {/* Order Management Table */}
       <h4>Orders List</h4>
-      <Table striped bordered hover className="mt-4">
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Status</th>
-            <th>Priority</th>
-            <th>Products</th>
-            <th>Assigned Staff</th>
-            <th>Total Price</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map((order) => (
-            <tr key={order._id}>
-              <td>{order.customer?.name}</td>
-              <td>{order.status}</td>
-              <td>{order.priority}</td>
-              <td>
-                {order.products.map((product) => (
-                  <span key={product.product._id}>
-                    {product.product.name} (x{product.quantity})
-                    <br />
+      <Table striped bordered hover className="mt-4" {...getTableProps()}>
+      <thead>
+          {headerGroups.map(headerGroup => (
+            <tr {...headerGroup.getHeaderGroupProps()}>
+              {headerGroup.headers.map(column => (
+                <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+                  {column.render('Header')}
+                  <span>
+                    {column.isSorted
+                      ? column.isSortedDesc
+                        ? ' ↓'
+                        : ' ↑'
+                      : ''}
                   </span>
-                ))}
-              </td>
-              <td>{order.assignedStaff?.name || 'Unassigned'}</td>
-              <td>{(order.totalPrice).toFixed(2)}</td>
-              <td>
-                <Button variant="info" onClick={() => handleViewOrder(order._id)} className="me-2">View</Button>
-                <Button variant="warning" onClick={() => handleEditOrder(order._id)}>Edit</Button>{' '}
-                <Button variant="danger" onClick={() => handleDeleteOrder(order._id)}>Cancel Order</Button>
-              </td>
+                </th>
+              ))}
             </tr>
           ))}
+        </thead>
+        <tbody {...getTableBodyProps()}>
+          {rows.map(row => {
+            prepareRow(row);
+            return (
+              <tr {...row.getRowProps()}>
+                {row.cells.map(cell => {
+                  return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>;
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </Table>
     </div>
