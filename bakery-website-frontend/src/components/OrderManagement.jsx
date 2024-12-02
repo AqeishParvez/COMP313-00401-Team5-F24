@@ -8,6 +8,7 @@ const OrderManagement = () => {
   const { getAuthHeader } = useAuth();
   const [orders, setOrders] = useState([]);
   const [staffList, setStaffList] = useState([]);
+  const [productSummary, setProductSummary] = useState([]); // To store aggregated product summary
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,6 +21,7 @@ const OrderManagement = () => {
     try {
       const response = await axios.get('http://localhost:5001/api/orders', getAuthHeader());
       setOrders(response.data);
+      calculateProductSummary(response.data); // Calculate product summary after fetching orders
     } catch (err) {
       console.error('Error fetching orders:', err);
     }
@@ -33,6 +35,30 @@ const OrderManagement = () => {
     } catch (err) {
       console.error('Error fetching staff:', err);
     }
+  };
+
+  // Calculate product summary
+  const calculateProductSummary = (orders) => {
+    const summary = {};
+    orders.forEach((order) => {
+      if (order.assignedStaff?.id === getAuthHeader()?.userId) { // Filter orders assigned to the logged-in staff
+        // Exclude completed orders from the summary
+        if (order.status === 'completed') {
+          return;
+        }
+        order.products.forEach(({ product, quantity }) => {
+          if (summary[product.name]) {
+            summary[product.name] += quantity;
+          } else {
+            summary[product.name] = quantity;
+          }
+        });
+      }
+    });
+
+    // Convert summary object to an array for easier rendering
+    const summaryArray = Object.entries(summary).map(([name, quantity]) => ({ name, quantity }));
+    setProductSummary(summaryArray);
   };
 
   // Navigate to Order Details page
@@ -59,6 +85,30 @@ const OrderManagement = () => {
   return (
     <div>
       <h3>Manage Orders</h3>
+
+      {/* Product Summary Section */}
+      <div className="mt-4">
+        <h4>Pending Product Summary</h4>
+        <Table striped bordered hover>
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {productSummary.map((product) => (
+              <tr key={product.name}>
+                <td>{product.name}</td>
+                <td>{product.quantity}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </div>
+
+      {/* Order Management Table */}
+      <h4>Orders List</h4>
       <Table striped bordered hover className="mt-4">
         <thead>
           <tr>
