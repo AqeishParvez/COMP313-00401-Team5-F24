@@ -10,20 +10,29 @@ const Products = () => {
   const [newestProducts, setNewestProducts] = useState([]);
   const [popularProducts, setPopularProducts] = useState([]);
   const { addToCart } = useCart();
-
+  
   // to get current page, probably not the best idea... but too lazt to open a new page
   const location = useLocation();
+
+  // for search product
+  const queryParams = new URLSearchParams(location.search);
+  const searchQuery = queryParams.get('query');
 
   useEffect(() => {
     fetchProducts();
     if (location.pathname === '/') {
       fetchHighlightProducts();
     }
-  }, []);
+  }, [searchQuery, location.pathname]);
 
   const fetchProducts = async () => {
       try {
-        const response = await axios.get('http://localhost:5001/api/products');
+        let response;
+        if (!searchQuery){
+          response = await axios.get('http://localhost:5001/api/products');
+        } else {
+          response = await axios.get(`http://localhost:5001/api/products/search?query=${searchQuery}`);
+        }
         setProducts(response.data);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -95,8 +104,11 @@ const Products = () => {
         </>
       )}
 
+      {location.pathname.includes('/search') && (
+        <h2>Search Results for: {searchQuery}</h2>
+      )}
       {/* Products Section */}
-      {products.length > 0 ? renderProductCards(products) : <p>Loading products...</p>}
+      {products.length > 0 ? renderProductCards(products) : location.pathname.includes('/search') ? <p>No result found for : {searchQuery}</p> : <p>Loading products...</p>}
 
     </Container>
   );

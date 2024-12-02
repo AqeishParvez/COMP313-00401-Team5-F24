@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Navbar, Nav, NavDropdown, Button } from 'react-bootstrap';
+import { Navbar, Nav, NavDropdown, Button, FormControl} from 'react-bootstrap';
 import { getUserInfo } from '../helpers/utils';
 import { useCart } from '../contexts/CartContext';
 
 
 const CustomNavbar = () => {
   const [user, setUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const { setCart, fetchCart, itemCount } = useCart();
 
@@ -56,6 +57,13 @@ const CustomNavbar = () => {
   const handleCartClick = async () => {
     await fetchCart(); // Fetch cart before navigating to /cart
     navigate('/cart');
+  };
+
+  // Search function
+  const handleSearch = (event) => {
+    event.preventDefault();
+    console.log('Searching for:', searchQuery);
+    navigate(`/search?query=${searchQuery}`);
   };
 
   return (
@@ -117,6 +125,18 @@ const CustomNavbar = () => {
             </>
           )}
         </Nav>
+        <form className="d-flex ms-auto" onSubmit={handleSearch}>
+          <FormControl
+            type="search"
+            placeholder="Search products"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)} 
+            className="me-2"
+            aria-label="Search"
+          />
+          <Button variant="outline-success" type="submit">Search</Button>
+        </form>
+        
       </Navbar.Collapse>
     </Navbar>
   );

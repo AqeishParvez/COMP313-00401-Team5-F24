@@ -140,6 +140,18 @@ router.get('/newest', async (req, res) => {
   }
 });
 
+//search route
+router.get('/search', async (req, res) => {
+  const query = req.query.query;
+  try {
+    const regex = new RegExp(query, 'i');
+    const products = await Product.find({ name: { $regex: regex } });
+    res.json(products);
+  } catch (err) {
+      res.status(500).json({ message: err.message });
+  }
+});
+
 
 // Get product availability
 router.get('/availability', async (req, res) => {
