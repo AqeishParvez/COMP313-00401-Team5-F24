@@ -1,6 +1,7 @@
 const express = require('express');
 const Product = require('../models/Product');
 const router = express.Router();
+const Order = require('../models/Order');
 const authenticateToken = require('../middleware/authMiddleware.js');
 
 // Get all products
@@ -130,9 +131,10 @@ router.get('/popular', async (req, res) => {
 });
 
 //get 5 most newest item for the homepage
-router.get('/new', async (req, res) => {
+router.get('/newest', async (req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 }).limit(5); 
+    res.json(products);
   } catch (err) {
       res.status(500).json({ message: err.message });
   }
