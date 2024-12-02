@@ -1,7 +1,7 @@
 // ProductManagement.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, Button, Form, Modal } from 'react-bootstrap';
+import { Table, Button, Form, Modal, Row, Col } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
 
 const ProductManagement = () => {
@@ -11,6 +11,11 @@ const ProductManagement = () => {
   const [newProduct, setNewProduct] = useState({ name: '', description: '', price: 0, quantity: 0 });
   const [editingProduct, setEditingProduct] = useState(null); // Holds the product being edited
   const [showModal, setShowModal] = useState(false); // Controls modal visibility
+  const [selectedField, setSelectedField] = useState('');
+  const [operator, setOperator] = useState('contains');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
+
 
   useEffect(() => {
     fetchProducts();
@@ -78,7 +83,35 @@ const ProductManagement = () => {
     } catch (err) {
       console.error('Error deleting product:', err);
     }
-  };  
+  };
+
+  const filteredProducts = products
+  .filter((product) => {
+    if (!selectedField || !searchTerm) return true;
+
+    const value = product[selectedField]?.toString().toLowerCase();
+    const searchValue = searchTerm.toLowerCase();
+
+    if (operator === 'contains') return value?.includes(searchValue);
+    if (operator === 'equal') return value === searchValue;
+    if (operator === 'greaterThan') return parseFloat(value) > parseFloat(searchValue);
+
+    return true;
+  })
+  .sort((a, b) => {
+    if (!selectedField) return 0;
+
+    const valueA = a[selectedField];
+    const valueB = b[selectedField];
+
+    if (sortOrder === 'asc') return valueA > valueB ? 1 : -1;
+    if (sortOrder === 'desc') return valueA < valueB ? 1 : -1;
+
+    return 0;
+  });
+
+  
+
 
   return (
     <div>
@@ -139,6 +172,58 @@ const ProductManagement = () => {
         </Button>
       </Form>
 
+      {/* Search and Filter Form */}
+      <Form className="mb-4">
+        <Row>
+          <Col>
+            <Form.Group>
+              <Form.Label>Field</Form.Label>
+              <Form.Select value={selectedField} onChange={(e) => setSelectedField(e.target.value)}>
+                <option value="">Select Field</option>
+                <option value="name">Name</option>
+                <option value="description">Description</option>
+                <option value="price">Price</option>
+                <option value="quantity">Quantity</option>
+              </Form.Select>
+            </Form.Group>
+          </Col>
+
+          <Col>
+            <Form.Group>
+              <Form.Label>Operator</Form.Label>
+              <Form.Select value={operator} onChange={(e) => setOperator(e.target.value)}>
+                <option value="contains">Contains</option>
+                <option value="equal">Equal To</option>
+                <option value="greaterThan">Greater Than</option>
+              </Form.Select>
+            </Form.Group>
+          </Col>
+
+          <Col>
+            <Form.Group>
+              <Form.Label>Search</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </Form.Group>
+          </Col>
+
+          <Col>
+            <Form.Group>
+              <Form.Label>Sort Order</Form.Label>
+              <Form.Select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </Form.Select>
+            </Form.Group>
+          </Col>
+        </Row>
+      </Form>
+
+
       {/* Product Table */}
       <Table striped bordered hover className="mt-4">
         <thead>
@@ -152,17 +237,15 @@ const ProductManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <tr key={product._id}>
               <td>{product.name}</td>
               <td>{product.description}</td>
               <td>${product.price}</td>
               <td>{product.quantity}</td>
-              {/* Display available if true otherwise show out of stock */}
               <td>{product.availability ? 'Available' : 'Out of Stock'}</td>
               <td>
                 <Button variant="warning" onClick={() => handleEditProduct(product)}>Edit</Button>{' '}
-                {/* Make delete button disabled if userRole is staff */}
                 <Button variant="danger" onClick={() => handleDeleteProduct(product._id)} disabled={userRole === 'staff'}>
                   Delete
                 </Button>
