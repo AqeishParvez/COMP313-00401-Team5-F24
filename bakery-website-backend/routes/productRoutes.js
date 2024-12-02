@@ -89,6 +89,56 @@ router.get('/brief', async (req, res) => {
     }
 });
 
+// get 5 popular product for the homepage
+router.get('/popular', async (req, res) => {
+  try {
+    // will probably take forever irl, but for now... this is fine
+    /*
+    break down order's product array into individual
+    group by same product and increase count / appearance
+    sort Desc
+    take 5
+    look them up in product
+    pass over useful result only
+    */
+    const popularProducts = await Order.aggregate([
+      {$unwind: '$products'},
+      {$group: {_id: '$products.product', orderCount: { $sum: 1 }}},
+      {$sort: { orderCount: -1 }},
+      {$limit: 5},
+      {$lookup: {
+          from: 'products',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'productDetails'
+        }},
+      {$unwind: '$productDetails'},
+      {$project: {
+          _id: 0,
+          productId: '$_id',
+          name: '$productDetails.name',
+          price: '$productDetails.price',
+          quantity: '$productDetails.quantity',
+          orderCount: 1 //probably not gonna be useful
+        }}
+    ]);
+
+    res.json(popularProducts);
+  } catch (err) {
+      res.status(500).json({ message: err.message });
+  }
+});
+
+//get 5 most newest item for the homepage
+router.get('/new', async (req, res) => {
+  try {
+    const products = await Product.find().sort({ createdAt: -1 }).limit(5); 
+  } catch (err) {
+      res.status(500).json({ message: err.message });
+  }
+});
+
+
 // Get product availability
 router.get('/availability', async (req, res) => {
     try {

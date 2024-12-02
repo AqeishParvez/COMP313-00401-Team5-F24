@@ -4,10 +4,12 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { Table, Spinner, Alert, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../contexts/CartContext';
 
 const OrderDetails = () => {
     const { id } = useParams(); // Get the order ID from the URL
     const { getAuthHeader } = useAuth();
+    const { addToCart } = useCart();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -27,6 +29,12 @@ const OrderDetails = () => {
 
         fetchOrderDetails();
     }, [id, getAuthHeader]);
+
+    const handleReorder = (product, quantity) => {
+        if (product.quantity > 0) {
+            addToCart(product, quantity);
+        }
+    };
 
     if (loading) {
         return <Spinner animation="border" role="status"><span className="visually-hidden">Loading...</span></Spinner>;
@@ -57,6 +65,7 @@ const OrderDetails = () => {
                         <th>Quantity</th>
                         <th>Price</th>
                         <th>Total</th>
+                        <th>Reorder</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,6 +75,14 @@ const OrderDetails = () => {
                             <td>{item.quantity}</td>
                             <td>${item.product.price.toFixed(2)}</td>
                             <td>${(item.product.price * item.quantity).toFixed(2)}</td>
+                            <td>
+                                <Button
+                                    variant="primary"
+                                    onClick={() => handleReorder(item.product, 1)}
+                                >
+                                    Reorder this
+                                </Button>
+                            </td>
                         </tr>
                     ))}
                 </tbody>
