@@ -42,6 +42,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Cleanup expired reservations every 30 minutes
+cleanupExpiredReservations(); // Run once on startup
 setInterval(cleanupExpiredReservations, 1000 * 60 * 30);
 
 // Start the server

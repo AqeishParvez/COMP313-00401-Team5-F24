@@ -118,7 +118,7 @@ router.post('/checkout', authenticateToken, checkRole(['customer']), async (req,
           timeoutEntry.quantity -= item.quantity;
           if (timeoutEntry.quantity === 0) {
             // As this is a mongoose model, we cannot use remove() method
-            await timeoutEntry.delete();
+            await timeoutEntry.delete;
           } else {
               await timeoutEntry.save();
           }

@@ -12,10 +12,11 @@ const cleanupExpiredReservations = async () => {
                 product.quantity += reservation.quantity;
                 await product.save();
             }
-            await reservation.remove();
+            await reservation.delete;
         }
 
         console.log('Expired reservations cleaned up successfully');
+        console.log('Next clean up scheduled for:', new Date(Date.now() + 1000 * 60 * 30).toLocaleTimeString());
     } catch (error) {
         console.error('Error cleaning up expired reservations:', error);
     }
