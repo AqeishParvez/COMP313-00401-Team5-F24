@@ -5,6 +5,18 @@ const User = require('../models/User');
 const router = express.Router();
 const authenticateToken = require('../middleware/authMiddleware');
 
+// Add for password reset, Move this to app if needed
+const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    secure: true,
+    port: 465,
+    auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASSWORD
+    }
+});
+
 // Register a new user
 router.post('/register', async (req, res) => {
     console.log("Creating a new user")
@@ -36,6 +48,34 @@ router.post('/register', async (req, res) => {
         res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
         res.status(500).json({ message: err.message });
+    }
+});
+
+// Password reset request linl
+router.post('/reset-password', async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user){
+        res.status(200).json({ msg: 'A password reset link will be sent to the email if it exists in our system.'});
+    } else {
+        const resetToken = jwt.sign({ email: email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        console.log(email)
+        const mailOptions = {
+            from: process.env.EMAIL,
+            //to: req.body.email,
+            to: email,
+            subject: 'Bakery - Password Reset Request',
+            text: `Here is your reset link:\n ${req.protocol}://${process.env.FRONTEND_URL}/reset/${resetToken}`
+        };
+        res.status(200).json({ msg: 'A password reset link will be sent to the email if it exists in our system.'});
+        
+        try {
+            await transporter.sendMail(mailOptions);
+            res.status(200).send('Password reset email sent');
+        } catch (err) {
+            res.status(500).send('Error sending email');
+        }
+        
     }
 });
 

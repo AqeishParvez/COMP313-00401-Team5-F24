@@ -6,6 +6,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [msg, setMsg] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -37,10 +38,21 @@ const Login = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    // ToDo: Navigate to the password reset page after said page is done
+    try {
+      const response = await axios.post('http://localhost:5001/api/auth/reset-password', { email });
+      setMsg(response.data.msg);
+    } catch (err) {
+      setError('Server error, please retry later');
+    }
+  };
+
   return (
     <div>
       <h2>Login</h2>
       {error && <p style={{ color: 'red' }}>{error}</p>}
+      {msg && <p style={{ color: 'red' }}>{msg}</p>}
       <form onSubmit={handleLogin}>
         <div>
           <label>Email</label>
@@ -51,6 +63,7 @@ const Login = () => {
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
         <button type="submit">Login</button>
+        <button type="button" onClick={handleForgotPassword}> Forgot Password </button>
       </form>
     </div>
   );
