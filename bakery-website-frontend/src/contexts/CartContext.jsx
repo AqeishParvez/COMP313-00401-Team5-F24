@@ -24,9 +24,7 @@ export const CartProvider = ({ children }) => {
 
   const fetchCart = async () => {
     // Because Manager and staff should not have cart, also am sick of all those error on console
-    if (userRole !== 'customer'){
-      return;
-    }
+    if (userRole && userRole != 'customer') return;
     setIsLoading(true);
     try {
       console.log("Fetching cart");
@@ -41,6 +39,12 @@ export const CartProvider = ({ children }) => {
   };
 
   const addToCart = async (product, quantity = 1) => {
+    // Why even try? should reject right away.
+    if (userRole && userRole != 'customer') {
+      alert('Employee are not permitted to add to cart\nPlease log out of your work account first before purchasing');
+      return;
+    }
+
     try {
       const response = await axios.post(
         'http://localhost:5001/api/cart',
