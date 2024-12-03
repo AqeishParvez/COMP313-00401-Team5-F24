@@ -20,7 +20,7 @@ import ManageInventory from './components/ProductManagement';
 import ManageOrders from './components/OrderManagement';
 import Notifications from './components/Notifications';
 import Profile from './pages/Profile';
-
+import PasswordReset from './pages/PasswordReset';
 
 const App = () => {
 
@@ -82,6 +82,8 @@ const App = () => {
 
               <Route path="/" element={<Products />} />
               <Route path="/account" element={<Profile />} />
+              <Route path="/reset/:token" element={<PasswordReset />} />
+
             </Routes>
           </CartProvider>
       </AuthProvider>

@@ -58,26 +58,59 @@ router.post('/reset-password', async (req, res) => {
     if (!user){
         res.status(200).json({ msg: 'A password reset link will be sent to the email if it exists in our system.'});
     } else {
-        const resetToken = jwt.sign({ email: email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        console.log(email)
+        /* Since the token will be the same everytime for the same user, as email is unchange
+        random math has been added to add complexity to the link
+        but this create another problem if you wish to have only 1 existing link at a time...
+        Help?
+        */
+        const resetToken = jwt.sign({ email: email + "_" + Math.floor(Math.random() * 10000) }, process.env.JWT_SECRET, { expiresIn: '1h' });
         const mailOptions = {
             from: process.env.EMAIL,
-            //to: req.body.email,
             to: email,
             subject: 'Bakery - Password Reset Request',
-            text: `Here is your reset link:\n ${req.protocol}://${process.env.FRONTEND_URL}/reset/${resetToken}`
+            text: `Here is your reset link, Please note that it will expire in an hour:\n ${req.protocol}://${process.env.FRONTEND_URL}/reset/${resetToken}`
         };
-        res.status(200).json({ msg: 'A password reset link will be sent to the email if it exists in our system.'});
         
         try {
             await transporter.sendMail(mailOptions);
-            res.status(200).send('Password reset email sent');
+            res.status(200).json({ msg: 'A password reset link will be sent to the email if it exists in our system.'});
         } catch (err) {
-            res.status(500).send('Error sending email');
+            res.status(500).json({ msg: 'Server error, please try again later.'})
         }
         
     }
 });
+
+// Update with new password
+router.put('/reset-password', async (req, res) => {
+    const { token, password } = req.body;
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const email = decoded.email.slice(0,decoded.email.lastIndexOf('_'))
+        await User.findOneAndUpdate(
+            { email: email },
+            { password: hashedPassword }
+        );
+        //console.log(updatedUser) set new: true and await await User to updateUser if debug is needed
+        res.json({ success: true, message: 'Password reset successfully' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Validate reset link
+router.get('/verify-reset-token/:token', async (req, res) => {
+    const { token } = req.params;
+    try {
+        jwt.verify(token, process.env.JWT_SECRET);
+        // May be return the decoded email and destory token here? idk
+        res.json({ valid: true });
+    } catch (err) {
+        res.status(400).json({ valid: false, message: 'Invalid or expired token' });
+    }
+});
+
 
 // Login a user
 router.post('/login', async (req, res) => {
