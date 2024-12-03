@@ -23,6 +23,10 @@ export const CartProvider = ({ children }) => {
   }, [userId]);
 
   const fetchCart = async () => {
+    // Because Manager and staff should not have cart, also am sick of all those error on console
+    if (userRole !== 'customer'){
+      return;
+    }
     setIsLoading(true);
     try {
       console.log("Fetching cart");
