@@ -1,0 +1,64 @@
+trigger:
+- main  
+pool:
+  name: 'default'  
+
+steps:
+- checkout: self
+  displayName: "Checkout the Code Repository"
+
+- task: UseNode@1
+  displayName: "Setup Node.js Environment"
+  inputs:
+    versionSpec: '16.x'
+    checkLatest: true
+
+- script: |
+    cd backend
+    npm install
+  displayName: "Install Backend Dependencies"
+
+- script: |
+    cd frontend
+    npm install
+  displayName: "Install Frontend Dependencies"
+
+- script: |
+    cd backend
+    npm run build
+  displayName: "Build Backend for Production"
+
+- script: |
+    cd frontend
+    npm run build
+  displayName: "Build Frontend for Production"
+
+- task: PublishTestResults@2
+  displayName: "Publish Test Results"
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/test-results.xml'
+    failTaskOnFailedTests: true
+
+- task: PublishCodeCoverageResults@1
+  displayName: "Publish Code Coverage"
+  inputs:
+    codeCoverageTool: 'cobertura'
+    summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.cobertura.xml'
+    reportDirectory: '$(System.DefaultWorkingDirectory)/**/CoverageReport'
+
+- script: |
+    echo "Deploying QA Environment"
+  displayName: "Deploy Application"
+
+- task: PublishBuildArtifacts@1
+  displayName: "Publish Frontend Build Artifacts"
+  inputs:
+    PathtoPublish: 'frontend/build'  
+    ArtifactName: 'FrontendBuild'
+
+- task: PublishBuildArtifacts@1
+  displayName: "Publish Backend Build Artifacts"
+  inputs:
+    PathtoPublish: 'backend/build' 
+    ArtifactName: 'BackendBuild'
