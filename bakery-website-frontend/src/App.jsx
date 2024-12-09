@@ -13,6 +13,7 @@ import Navbar from './components/Navbar';
 import OrderDetails from './pages/OrderDetails';
 import EditOrder from './components/EditOrder';
 import Cart from './components/Cart';
+import StaffReports from './components/StaffReports';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import ManageStaff from './components/StaffManagement';
@@ -57,6 +58,12 @@ const App = () => {
                 </ProtectedRoute>
               } />
 
+              <Route path="/staff-reports" element={
+              <ProtectedRoute requiredRoles={['manager', 'staff']}>
+                <StaffReports />
+              </ProtectedRoute>
+            } />
+              
               <Route path="/staff-dashboard" element={
                 <ProtectedRoute requiredRoles={['manager','staff']}>
                   <StaffDashboard />
