@@ -1,0 +1,11 @@
+{
+  "name": "comp313-00401-team5-f24",
+  "version": "1.0.0",
+  "description": "#bakery-website-frontend contains the express backend #bakery-website-front contains the react front-end",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
