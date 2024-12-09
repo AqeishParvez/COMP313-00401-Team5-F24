@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Form, Alert, Card, Container, Row, Col, Modal } from 'react-bootstrap';
 
 const Profile = () => {
-  const { getAuthHeader, logout } = useAuth();
+  const { getAuthHeader, logout, userId } = useAuth();
   const [user, setUser] = useState(null);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({});
@@ -62,21 +62,22 @@ const Profile = () => {
     }
   };
 
-  // Handle profile deletion (for customers only)
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete your profile? This action is irreversible.')) {
-      return;
-    }
-
-    try {
-      await axios.delete('http://localhost:5001/api/auth/me', getAuthHeader());
-      logout(); // Log the user out after deleting the profile
-      navigate('/register');
-    } catch (err) {
-      setError('Failed to delete profile.');
-      console.error(err);
-    }
-  };
+    // Handle profile deletion (for customers only)
+    const handleDelete = async () => {
+      if (!window.confirm('Are you sure you want to delete your profile? This action is irreversible.')) {
+        return;
+      }
+      try {
+        // Get user id from getAuthHeader
+        await axios.delete(`http://localhost:5001/api/auth/${userId}`, getAuthHeader());
+        logout; // Log the user out after deleting the profile
+        navigate('/login');
+        window.location.reload(); // Reload the page to redirect to the login page
+      } catch (err) {
+        setError('Failed to delete profile.');
+        console.error(err);
+      }
+    };  
 
   // Handle Change Password
   const handleChangePassword = async () => {

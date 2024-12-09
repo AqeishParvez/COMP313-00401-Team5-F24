@@ -97,8 +97,10 @@ const CustomNavbar = () => {
           }
 
           {user && (user.role === 'manager' || user.role === 'staff') && (
+            <>
             <Nav.Link as={Link} to="/send-notifications">Send Notifications</Nav.Link>
             <Nav.Link as={Link} to="/staff-reports">Order Reports</Nav.Link>
+            </>
           )}
           
           {user && user.role === 'customer' && (

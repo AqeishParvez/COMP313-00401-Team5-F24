@@ -185,6 +185,24 @@ router.get('/me', authenticateToken, async (req, res) => {
     });
 });
 
+// delete account information restricted for customers alone
+router.delete("/:id", authenticateToken, async (req, res) => {
+    console.log("Deleting a user")
+    console.log("User ID: ", req.params.id)
+    if (req.user.role === "customer") {
+      try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+  
+        res.json({ message: "User deleted successfully" });
+      } catch (err) {
+        res.status(500).json({ message: err.message });
+      }
+    } else {
+      return res.status(403).json({ message: "Access denied" });
+    }
+});
+
 router.post('/update', authenticateToken, async (req, res) => {
     console.log("--------")
     const userId = req.user.id;
