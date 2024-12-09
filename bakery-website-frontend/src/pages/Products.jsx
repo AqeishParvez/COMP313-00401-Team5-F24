@@ -47,6 +47,8 @@ const Products = () => {
       ]);
       setNewestProducts(newestResponse.data);
       setPopularProducts(popularResponse.data);
+      console.log(newestResponse.data);
+      console.log(popularResponse.data);
     } catch (error) {
       console.error('Error fetching highlight products:', error);
     }
@@ -54,7 +56,7 @@ const Products = () => {
 
   const renderProductCards = (productList) => (
     <Row>
-    {products.map((product) => (
+    {productList.map((product) => (
       <Col key={product._id} sm={12} md={6} lg={4} xl={3} className="mb-4">
         <Card>
           <Card.Img variant="top" src="https://via.placeholder.com/150" alt={product.name} />
@@ -98,9 +100,12 @@ const Products = () => {
           {/* Newest/Popular Products Section for*/}
           <h2>Our Newest Items</h2>
           {newestProducts.length > 0 ? renderProductCards(newestProducts) : <p>Loading newest products...</p>}
-
+          <br></br>
           <h2>Most Popular Items</h2>
           {popularProducts.length > 0 ? renderProductCards(popularProducts) : <p>Loading most popular products...</p>}
+          <br></br>
+          <h2>All Items</h2>
+          <br></br>
         </>
       )}
 

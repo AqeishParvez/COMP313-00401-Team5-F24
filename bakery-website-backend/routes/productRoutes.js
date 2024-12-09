@@ -106,7 +106,7 @@ router.get('/popular', async (req, res) => {
       {$unwind: '$products'},
       {$group: {_id: '$products.product', orderCount: { $sum: 1 }}},
       {$sort: { orderCount: -1 }},
-      {$limit: 5},
+      {$limit: 3},
       {$lookup: {
           from: 'products',
           localField: '_id',
@@ -133,7 +133,7 @@ router.get('/popular', async (req, res) => {
 //get 5 most newest item for the homepage
 router.get('/newest', async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 }).limit(5); 
+    const products = await Product.find().sort({ createdAt: -1 }).limit(3); 
     res.json(products);
   } catch (err) {
       res.status(500).json({ message: err.message });
