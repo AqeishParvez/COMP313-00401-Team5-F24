@@ -27,6 +27,10 @@ const ProtectedRoute = ({ children, requiredRoles }) => {
     return <div>Loading...</div>;
   }
 
+    if (location.pathname === '/staff-reports' && role === 'staff') {
+    return children;
+  }
+
   // Check if user role is in requiredRoles
   return requiredRoles.includes(role) ? children : <Navigate to="/login" />;
 };
